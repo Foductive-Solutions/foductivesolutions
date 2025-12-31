@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Modal from '../../components/Modal'
+import AddCustomerForm from '../../components/forms/AddCustomerForm'
 
 const Customers = () => {
   const [customers, setCustomers] = useState([
@@ -42,11 +44,25 @@ const Customers = () => {
   ])
 
   const [searchTerm, setSearchTerm] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const filteredCustomers = customers.filter(customer =>
     customer.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.mobile.includes(searchTerm)
   )
+
+  const handleAddCustomer = (formData) => {
+    const newCustomer = {
+      id: customers.length + 1,
+      ...formData,
+      rate1000ml: formData.rate1000ml ? `₹ ${formData.rate1000ml}` : '₹ 0',
+      rate500ml: formData.rate500ml ? `₹ ${formData.rate500ml}` : '₹ 0',
+      rate100ml: formData.rate100ml ? `₹ ${formData.rate100ml}` : '₹ 0'
+    }
+    setCustomers([...customers, newCustomer])
+    setIsModalOpen(false)
+    alert('Customer added successfully!')
+  }
 
   return (
     <div className="space-y-6 text-slate-200">
@@ -60,7 +76,10 @@ const Customers = () => {
             Manage all customer accounts and details
           </p>
         </div>
-        <button className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+        >
           + Add Customer
         </button>
       </div>
@@ -154,6 +173,18 @@ const Customers = () => {
           </h3>
         </div>
       </div>
+
+      {/* Add Customer Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add New Customer"
+      >
+        <AddCustomerForm
+          onSubmit={handleAddCustomer}
+          onCancel={() => setIsModalOpen(false)}
+        />
+      </Modal>
     </div>
   )
 }

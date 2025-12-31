@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import Modal from '../../components/Modal'
+import AddExpenseForm from '../../components/forms/AddExpenseForm'
 
 const Expenses = () => {
-  const [expenses] = useState([
+  const [expenses, setExpenses] = useState([
     {
       id: 1,
       name: "Petrol",
@@ -53,6 +55,42 @@ const Expenses = () => {
   ])
 
   const [filter, setFilter] = useState('all')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [settleModal, setSettleModal] = useState({ isOpen: false, expenseId: null })
+
+  const handleAddExpense = (formData) => {
+    const newExpense = {
+      id: expenses.length + 1,
+      name: formData.name,
+      amount: parseInt(formData.amount) || 0,
+      date: formData.date,
+      paymentMode: formData.paymentMode,
+      category: formData.category,
+      paid: true // Expenses are typically marked as paid when added
+    }
+    setExpenses([newExpense, ...expenses])
+    setIsModalOpen(false)
+    alert('Expense added successfully!')
+  }
+
+  const openSettleModal = (expenseId) => {
+    setSettleModal({ isOpen: true, expenseId })
+  }
+
+  const handleSettleExpense = () => {
+    const updatedExpenses = expenses.map(e => {
+      if (e.id === settleModal.expenseId) {
+        return {
+          ...e,
+          paid: true
+        }
+      }
+      return e
+    })
+    setExpenses(updatedExpenses)
+    setSettleModal({ isOpen: false, expenseId: null })
+    alert('Expense marked as settled!')
+  }
 
   const categories = ['Petrol', 'Driver Salary', 'Vehicle Maintenance', 'Rent', 'Labour Charges', 'Miscellaneous']
 
@@ -75,7 +113,9 @@ const Expenses = () => {
             Track and manage company expenses
           </p>
         </div>
-        <button className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
           + Add Expense
         </button>
       </div>
@@ -149,6 +189,7 @@ const Expenses = () => {
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-right">Amount</th>
                 <th className="px-4 py-3 text-left">Payment Mode</th>
+                <th className="px-4 py-3 text-center">Status</th>
                 <th className="px-4 py-3 text-center">Actions</th>
               </tr>
             </thead>
@@ -173,9 +214,26 @@ const Expenses = () => {
                     {expense.paymentMode}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <button className="text-teal-400 hover:text-teal-300 transition">
-                      Edit
-                    </button>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                      expense.paid
+                        ? 'bg-green-900 text-green-200'
+                        : 'bg-yellow-900 text-yellow-200'
+                    }`}>
+                      {expense.paid ? '✓ Settled' : 'Pending'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {!expense.paid && (
+                      <button
+                        onClick={() => openSettleModal(expense.id)}
+                        className="text-green-400 hover:text-green-300 text-sm font-medium transition"
+                      >
+                        💳 Settle
+                      </button>
+                    )}
+                    {expense.paid && (
+                      <span className="text-green-400 text-sm">Settled</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -257,7 +315,66 @@ const Expenses = () => {
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Add Expense Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add New Expense"
+      >
+        <AddExpenseForm
+          onSubmit={handleAddExpense}
+          onCancel={() => setIsModalOpen(false)}
+        />
+      </Modal>
+      {/* Settle Expense Modal */}
+      <Modal
+        isOpen={settleModal.isOpen}
+        onClose={() => setSettleModal({ isOpen: false, expenseId: null })}
+        title="Settle Expense"
+      >
+        <div className="space-y-4">
+          {settleModal.expenseId && expenses.find(e => e.id === settleModal.expenseId) && (
+            <>
+              <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 space-y-2">
+                <p className="text-slate-300">
+                  <strong>Expense:</strong> {expenses.find(e => e.id === settleModal.expenseId)?.name}
+                </p>
+                <p className="text-slate-300">
+                  <strong>Category:</strong> {expenses.find(e => e.id === settleModal.expenseId)?.category}
+                </p>
+                <p className="text-slate-300">
+                  <strong>Amount:</strong> <span className="text-red-400 font-semibold">₹ {expenses.find(e => e.id === settleModal.expenseId)?.amount}</span>
+                </p>
+                <p className="text-slate-300">
+                  <strong>Payment Mode:</strong> {expenses.find(e => e.id === settleModal.expenseId)?.paymentMode}
+                </p>
+              </div>
+
+              <div className="bg-yellow-900 border border-yellow-700 rounded-lg p-3">
+                <p className="text-yellow-200 text-sm">
+                  <strong>Confirm settlement of this expense?</strong> This will mark the transaction as complete.
+                </p>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  onClick={() => setSettleModal({ isOpen: false, expenseId: null })}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSettleExpense}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium"
+                >
+                  Confirm Settlement
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>    </div>
   )
 }
 

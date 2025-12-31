@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import Modal from '../../components/Modal'
+import AddPurchaseForm from '../../components/forms/AddPurchaseForm'
 
 const Purchase = () => {
-  const [purchases] = useState([
+  const [purchases, setPurchases] = useState([
     {
       id: 1,
       vendorName: "Water Bottle Industries Ltd",
@@ -56,6 +58,75 @@ const Purchase = () => {
   ])
 
   const [filter, setFilter] = useState('all')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [settleModal, setSettleModal] = useState({ isOpen: false, purchaseId: null })
+  const [settlementAmount, setSettlementAmount] = useState('')
+
+  const handleAddPurchase = (formData) => {
+    const q1 = parseInt(formData.qty1000ml) || 0
+    const q2 = parseInt(formData.qty500ml) || 0
+    const q3 = parseInt(formData.qty100ml) || 0
+    const r1 = parseInt(formData.rate1000ml) || 0
+    const r2 = parseInt(formData.rate500ml) || 0
+    const r3 = parseInt(formData.rate100ml) || 0
+    const totalAmount = q1 * r1 + q2 * r2 + q3 * r3
+    const paid = parseInt(formData.paid) || 0
+
+    const newPurchase = {
+      id: purchases.length + 1,
+      vendorName: formData.vendorName,
+      orderDate: formData.orderDate,
+      deliveryDate: formData.deliveryDate,
+      qty1000ml: q1,
+      qty500ml: q2,
+      qty100ml: q3,
+      rate1000ml: r1,
+      rate500ml: r2,
+      rate100ml: r3,
+      billingAmount: totalAmount,
+      paid: paid,
+      remaining: totalAmount - paid,
+      paymentMode: formData.paymentMode,
+      status: paid >= totalAmount ? "Paid" : "Pending"
+    }
+    setPurchases([newPurchase, ...purchases])
+    setIsModalOpen(false)
+    alert('Purchase order created successfully!')
+  }
+
+  const openSettleModal = (purchaseId) => {
+    setSettleModal({ isOpen: true, purchaseId })
+    setSettlementAmount('')
+  }
+
+  const handleSettlePayment = () => {
+    const purchase = purchases.find(p => p.id === settleModal.purchaseId)
+    if (!purchase) return
+    
+    const additionalPayment = parseInt(settlementAmount) || 0
+    if (additionalPayment <= 0) {
+      alert('Please enter a valid amount')
+      return
+    }
+
+    const updatedPurchases = purchases.map(p => {
+      if (p.id === settleModal.purchaseId) {
+        const newPaid = p.paid + additionalPayment
+        const newRemaining = Math.max(0, p.billingAmount - newPaid)
+        return {
+          ...p,
+          paid: newPaid,
+          remaining: newRemaining,
+          status: newRemaining === 0 ? "Paid" : p.status
+        }
+      }
+      return p
+    })
+    setPurchases(updatedPurchases)
+    setSettleModal({ isOpen: false, purchaseId: null })
+    setSettlementAmount('')
+    alert('Payment recorded successfully!')
+  }
 
   const filteredPurchases = purchases.filter(p => {
     if (filter === 'all') return true
@@ -74,7 +145,9 @@ const Purchase = () => {
             Manage vendor purchases and inventory
           </p>
         </div>
-        <button className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
           + New Purchase Order
         </button>
       </div>
@@ -142,6 +215,7 @@ const Purchase = () => {
                 <th className="px-3 py-3 text-right">Remaining</th>
                 <th className="px-3 py-3 text-left">Mode</th>
                 <th className="px-3 py-3 text-left">Status</th>
+                <th className="px-3 py-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -188,6 +262,19 @@ const Purchase = () => {
                     }`}>
                       {purchase.status}
                     </span>
+                  </td>
+                  <td className="px-3 py-3 text-center">
+                    {purchase.remaining > 0 && (
+                      <button
+                        onClick={() => openSettleModal(purchase.id)}
+                        className="text-green-400 hover:text-green-300 text-sm font-medium transition"
+                      >
+                        💳 Pay
+                      </button>
+                    )}
+                    {purchase.remaining === 0 && (
+                      <span className="text-green-400 text-sm">✓ Settled</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -257,7 +344,75 @@ const Purchase = () => {
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Add Purchase Order Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Create New Purchase Order"
+      >
+        <AddPurchaseForm
+          onSubmit={handleAddPurchase}
+          onCancel={() => setIsModalOpen(false)}
+        />
+      </Modal>
+      {/* Settle Payment Modal */}
+      <Modal
+        isOpen={settleModal.isOpen}
+        onClose={() => setSettleModal({ isOpen: false, purchaseId: null })}
+        title="Record Payment"
+      >
+        <div className="space-y-4">
+          {settleModal.purchaseId && purchases.find(p => p.id === settleModal.purchaseId) && (
+            <>
+              <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 space-y-2">
+                <p className="text-slate-300">
+                  <strong>PO ID:</strong> PO-{settleModal.purchaseId.toString().padStart(4, '0')}
+                </p>
+                <p className="text-slate-300">
+                  <strong>Total Bill:</strong> <span className="text-yellow-400 font-semibold">₹ {purchases.find(p => p.id === settleModal.purchaseId)?.billingAmount}</span>
+                </p>
+                <p className="text-slate-300">
+                  <strong>Already Paid:</strong> <span className="text-green-400 font-semibold">₹ {purchases.find(p => p.id === settleModal.purchaseId)?.paid}</span>
+                </p>
+                <p className="text-slate-300">
+                  <strong>Remaining:</strong> <span className="text-red-400 font-semibold">₹ {purchases.find(p => p.id === settleModal.purchaseId)?.remaining}</span>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Amount to Pay Now (₹) *
+                </label>
+                <input
+                  type="number"
+                  value={settlementAmount}
+                  onChange={(e) => setSettlementAmount(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
+                  placeholder="Enter amount"
+                  min="1"
+                  max={purchases.find(p => p.id === settleModal.purchaseId)?.remaining || 0}
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  onClick={() => setSettleModal({ isOpen: false, purchaseId: null })}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSettlePayment}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium"
+                >
+                  Record Payment
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>    </div>
   )
 }
 

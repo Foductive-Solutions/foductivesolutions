@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import Modal from '../../components/Modal'
+import AddFeedbackForm from '../../components/forms/AddFeedbackForm'
 
 const Feedback = () => {
-  const [feedbacks] = useState([
+  const [feedbacks, setFeedbacks] = useState([
     {
       id: 1,
       customerName: "Hotel Sai Palace",
@@ -42,6 +44,22 @@ const Feedback = () => {
 
   const [filter, setFilter] = useState('all')
   const [expandedId, setExpandedId] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleAddFeedback = (formData) => {
+    const newFeedback = {
+      id: feedbacks.length + 1,
+      customerName: formData.customerName,
+      contactPerson: formData.contactPerson || 'N/A',
+      rating: parseInt(formData.rating) || 5,
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      message: formData.message,
+      category: formData.category
+    }
+    setFeedbacks([newFeedback, ...feedbacks])
+    setIsModalOpen(false)
+    alert('Feedback added successfully!')
+  }
 
   const filteredFeedbacks = feedbacks.filter(fb => {
     if (filter === 'all') return true
@@ -74,7 +92,9 @@ const Feedback = () => {
             Manage and review customer feedback
           </p>
         </div>
-        <button className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
           + Add Feedback
         </button>
       </div>
@@ -282,6 +302,18 @@ const Feedback = () => {
           </div>
         </div>
       </div>
+
+      {/* Add Feedback Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add Customer Feedback"
+      >
+        <AddFeedbackForm
+          onSubmit={handleAddFeedback}
+          onCancel={() => setIsModalOpen(false)}
+        />
+      </Modal>
     </div>
   )
 }
