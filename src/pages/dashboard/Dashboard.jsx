@@ -210,9 +210,9 @@ const Dashboard = () => {
                   recentOrders.map((order) => (
                     <RecentOrderRow
                       key={order.id}
-                      customer={order.shopName}
-                      date={order.orderDate}
-                      amount={formatCurrency(order.billingAmount || 0)}
+                      customer={order.customer || order.shopName}
+                      date={order.date || order.orderDate}
+                      amount={formatCurrency(order.totalBill || order.billingAmount || 0)}
                       status={order.status}
                     />
                   ))
