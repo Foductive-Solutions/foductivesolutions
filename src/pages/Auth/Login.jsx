@@ -1,29 +1,50 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 const Login = () => {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login, currentUser } = useAuth()
 
-  const handleLogin = (e) => {
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard')
+    }
+  }, [currentUser, navigate])
+
+  const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
 
-    // Simple validation - replace with actual auth later
-    if (!username || !password) {
-      setError('Please enter both username and password')
+    if (!email || !password) {
+      setError('Please enter both email and password')
       return
     }
 
-    // Temporary auth check - replace with real authentication
-    if (username === 'admin' && password === 'admin') {
-      localStorage.setItem('isLoggedIn', 'true')
-      localStorage.setItem('username', username)
+    try {
+      setLoading(true)
+      await login(email, password)
       navigate('/dashboard')
-    } else {
-      setError('Invalid username or password')
+    } catch (err) {
+      console.error('Login error:', err)
+      if (err.code === 'auth/user-not-found') {
+        setError('No user found with this email')
+      } else if (err.code === 'auth/wrong-password') {
+        setError('Incorrect password')
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Invalid email format')
+      } else if (err.code === 'auth/invalid-credential') {
+        setError('Invalid email or password')
+      } else {
+        setError('Failed to login. Please try again.')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -53,17 +74,18 @@ const Login = () => {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* Username */}
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Username
+                Email
               </label>
               <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
-                placeholder="Enter your username"
+                placeholder="Enter your email"
+                disabled={loading}
               />
             </div>
 
@@ -78,30 +100,19 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
                 placeholder="Enter your password"
+                disabled={loading}
               />
             </div>
 
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition mt-6"
+              disabled={loading}
+              className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-teal-800 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition mt-6"
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-3 bg-slate-800 rounded border border-slate-700">
-            <p className="text-xs text-slate-400 text-center mb-2">
-              Demo Credentials:
-            </p>
-            <p className="text-xs text-slate-300 text-center">
-              Username: <span className="font-mono text-teal-400">admin</span>
-            </p>
-            <p className="text-xs text-slate-300 text-center">
-              Password: <span className="font-mono text-teal-400">admin</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>

@@ -1,8 +1,20 @@
 import React, { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { logout, currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -105,19 +117,13 @@ const AdminLayout = () => {
         </nav>
 
         <div className="p-4 border-t border-slate-800">
-          <NavLink
-            to="/login"
-            className={({ isActive }) =>
-              `block px-3 py-2 rounded transition text-center ${
-                isActive
-                  ? "bg-red-600 text-white"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              }`
-            }
+          <button
+            onClick={handleLogout}
+            className={`block w-full px-3 py-2 rounded transition text-center text-slate-400 hover:bg-red-600 hover:text-white`}
             title="Logout"
           >
             {sidebarOpen ? "🚪 Logout" : "🚪"}
-          </NavLink>
+          </button>
         </div>
       </div>
 
@@ -133,7 +139,7 @@ const AdminLayout = () => {
             ☰
           </button>
           <div className="text-slate-400 text-sm">
-            Welcome to Foductive Solution
+            {currentUser?.email || 'Welcome to Foductive Solution'}
           </div>
         </div>
 

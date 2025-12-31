@@ -1,5 +1,7 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './layout/AdminLayout'
 import Landing from './pages/landing/Landing'
 import Portfolio from './pages/portfolio/Portfolio'
@@ -14,23 +16,27 @@ import Customers from './pages/customers/Customers'
 
 const App = () => {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path='/' element={<Landing />} />
-      <Route path='/portfolio' element={<Portfolio />} />
-      <Route path="/login" element={<Login />} />
+    <AuthProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route path='/' element={<Landing />} />
+        <Route path='/portfolio' element={<Portfolio />} />
+        <Route path="/login" element={<Login />} />
 
-      {/* Admin Routes with Layout */}
-      <Route element={<AdminLayout />}>
-        <Route path='/dashboard' element={<Dashboard />} />
-        <Route path='/customers' element={<Customers />} />
-        <Route path='/customer/:id' element={<CustomerDetail />} />
-        <Route path='/orders' element={<Orders />} />
-        <Route path='/expenses' element={<Expenses />} />
-        <Route path='/purchase' element={<Purchase />} />
-        <Route path='/feedback' element={<Feedback />} />
-      </Route>
-    </Routes>
+        {/* Protected Admin Routes with Layout */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path='/dashboard' element={<Dashboard />} />
+            <Route path='/customers' element={<Customers />} />
+            <Route path='/customer/:id' element={<CustomerDetail />} />
+            <Route path='/orders' element={<Orders />} />
+            <Route path='/expenses' element={<Expenses />} />
+            <Route path='/purchase' element={<Purchase />} />
+            <Route path='/feedback' element={<Feedback />} />
+          </Route>
+        </Route>
+      </Routes>
+    </AuthProvider>
   )
 }
 
