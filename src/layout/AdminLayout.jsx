@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getCustomers, getOrders } from "../firebase/services";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const { logout, currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -13,6 +15,109 @@ const AdminLayout = () => {
       navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    try {
+      setDownloading(true);
+      
+      // Fetch all data
+      const [customers, orders] = await Promise.all([
+        getCustomers(),
+        getOrders()
+      ]);
+
+      // Generate customer report with order statistics
+      const reportData = customers.map(customer => {
+        // Find all orders for this customer
+        const customerOrders = orders.filter(o => 
+          o.customer === customer.shopName || o.customerId === customer.id
+        );
+
+        // Calculate statistics
+        const totalOrders = customerOrders.length;
+        const totalBottles = customerOrders.reduce((sum, o) => 
+          sum + (o.qty1000ml || 0) + (o.qty500ml || 0) + (o.qty100ml || 0), 0
+        );
+        const totalBilled = customerOrders.reduce((sum, o) => 
+          sum + (o.totalBill || o.billingAmount || 0), 0
+        );
+        const totalPaid = customerOrders.reduce((sum, o) => sum + (o.paid || 0), 0);
+        const totalPending = customerOrders.reduce((sum, o) => sum + (o.remaining || 0), 0);
+        
+        // Get first and last order dates
+        const orderDates = customerOrders.map(o => o.date || o.orderDate).filter(Boolean);
+        const firstOrder = orderDates.length > 0 ? orderDates[orderDates.length - 1] : 'N/A';
+        const lastOrder = orderDates.length > 0 ? orderDates[0] : 'N/A';
+
+        return {
+          shopName: customer.shopName || '',
+          billingPerson: customer.billingPerson || '',
+          mobile: customer.mobile || '',
+          location: customer.location || '',
+          frequency: customer.frequency || '',
+          totalOrders,
+          totalBottles,
+          totalBilled,
+          totalPaid,
+          totalPending,
+          firstOrder,
+          lastOrder
+        };
+      });
+
+      // Generate CSV
+      const headers = [
+        'Shop Name',
+        'Billing Person',
+        'Mobile',
+        'Location',
+        'Frequency',
+        'Total Orders',
+        'Total Bottles',
+        'Total Billed (₹)',
+        'Total Paid (₹)',
+        'Pending (₹)',
+        'First Order',
+        'Last Order'
+      ];
+
+      const csvContent = [
+        headers.join(','),
+        ...reportData.map(row => [
+          `"${row.shopName}"`,
+          `"${row.billingPerson}"`,
+          `"${row.mobile}"`,
+          `"${row.location}"`,
+          `"${row.frequency}"`,
+          row.totalOrders,
+          row.totalBottles,
+          row.totalBilled,
+          row.totalPaid,
+          row.totalPending,
+          `"${row.firstOrder}"`,
+          `"${row.lastOrder}"`
+        ].join(','))
+      ].join('\n');
+
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Foductive_Customer_Report_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('Report downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Error generating report. Please try again.');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -138,8 +243,27 @@ const AdminLayout = () => {
           >
             ☰
           </button>
-          <div className="text-slate-400 text-sm">
-            {currentUser?.email || 'Welcome to Foductive Solution'}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleDownloadReport}
+              disabled={downloading}
+              className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+              title="Download Customer Report"
+            >
+              {downloading ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  📥 Download Report
+                </>
+              )}
+            </button>
+            <div className="text-slate-400 text-sm">
+              {currentUser?.email || 'Welcome to Foductive Solution'}
+            </div>
           </div>
         </div>
 
