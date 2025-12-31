@@ -61,6 +61,8 @@ const Purchase = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [settleModal, setSettleModal] = useState({ isOpen: false, purchaseId: null })
   const [settlementAmount, setSettlementAmount] = useState('')
+  const [editingPurchase, setEditingPurchase] = useState(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   const handleAddPurchase = (formData) => {
     const q1 = parseInt(formData.qty1000ml) || 0
@@ -126,6 +128,45 @@ const Purchase = () => {
     setSettleModal({ isOpen: false, purchaseId: null })
     setSettlementAmount('')
     alert('Payment recorded successfully!')
+  }
+
+  const handleDeletePurchase = () => {
+    if (!deleteConfirm) return
+    const updatedPurchases = purchases.filter(p => p.id !== deleteConfirm)
+    setPurchases(updatedPurchases)
+    setDeleteConfirm(null)
+    alert('Purchase order deleted successfully!')
+  }
+
+  const handleEditPurchase = (updatedData) => {
+    const q1 = parseInt(updatedData.qty1000ml) || 0
+    const q2 = parseInt(updatedData.qty500ml) || 0
+    const q3 = parseInt(updatedData.qty100ml) || 0
+    const r1 = parseInt(updatedData.rate1000ml) || 0
+    const r2 = parseInt(updatedData.rate500ml) || 0
+    const r3 = parseInt(updatedData.rate100ml) || 0
+    const billingAmount = q1 * r1 + q2 * r2 + q3 * r3
+    const paid = parseInt(updatedData.paid) || 0
+    
+    const updatedPurchases = purchases.map(p => 
+      p.id === editingPurchase.id ? { 
+        ...p, 
+        ...updatedData,
+        qty1000ml: q1,
+        qty500ml: q2,
+        qty100ml: q3,
+        rate1000ml: r1,
+        rate500ml: r2,
+        rate100ml: r3,
+        billingAmount: billingAmount,
+        paid: paid,
+        remaining: Math.max(0, billingAmount - paid)
+      } : p
+    )
+    setPurchases(updatedPurchases)
+    setEditingPurchase(null)
+    setIsModalOpen(false)
+    alert('Purchase order updated successfully!')
   }
 
   const filteredPurchases = purchases.filter(p => {
@@ -263,7 +304,7 @@ const Purchase = () => {
                       {purchase.status}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-center">
+                  <td className="px-3 py-3 text-center space-x-2 flex justify-center items-center">
                     {purchase.remaining > 0 && (
                       <button
                         onClick={() => openSettleModal(purchase.id)}
@@ -275,6 +316,18 @@ const Purchase = () => {
                     {purchase.remaining === 0 && (
                       <span className="text-green-400 text-sm">✓ Settled</span>
                     )}
+                    <button
+                      onClick={() => setEditingPurchase(purchase)}
+                      className="text-blue-400 hover:text-blue-300 text-sm transition"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(purchase.id)}
+                      className="text-red-400 hover:text-red-300 text-sm transition"
+                    >
+                      🗑️
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -412,6 +465,50 @@ const Purchase = () => {
             </>
           )}
         </div>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal 
+        isOpen={editingPurchase !== null}
+        onClose={() => setEditingPurchase(null)}
+        title="Edit Purchase Order"
+      >
+        {editingPurchase && (
+          <AddPurchaseForm 
+            initialData={editingPurchase} 
+            isEdit={true}
+            onSubmit={handleEditPurchase}
+          />
+        )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal 
+        isOpen={deleteConfirm !== null}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete Purchase Order"
+      >
+        {deleteConfirm && (
+          <div className="space-y-4">
+            <p className="text-slate-300">
+              Are you sure you want to delete purchase order <strong className="text-teal-400">#{deleteConfirm}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end pt-4">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeletePurchase}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
+              >
+                Delete Order
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>    </div>
   )
 }

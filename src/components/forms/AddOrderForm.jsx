@@ -1,7 +1,17 @@
 import React, { useState, useMemo } from 'react'
 
-const AddOrderForm = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
+const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
+  const [formData, setFormData] = useState(initialData ? {
+    customer: initialData.customer || '',
+    qty1000ml: initialData.qty1000ml || '',
+    qty500ml: initialData.qty500ml || '',
+    qty100ml: initialData.qty100ml || '',
+    rate1000ml: initialData.rate1000ml || '',
+    rate500ml: initialData.rate500ml || '',
+    rate100ml: initialData.rate100ml || '',
+    paid: initialData.paid || '',
+    paymentMode: initialData.paymentMode || 'Cash'
+  } : {
     customer: '',
     qty1000ml: '',
     qty500ml: '',
@@ -43,17 +53,19 @@ const AddOrderForm = ({ onSubmit, onCancel }) => {
       return
     }
     onSubmit(formData)
-    setFormData({
-      customer: '',
-      qty1000ml: '',
-      qty500ml: '',
-      qty100ml: '',
-      rate1000ml: '',
-      rate500ml: '',
-      rate100ml: '',
-      paid: '',
-      paymentMode: 'Cash'
-    })
+    if (!isEdit) {
+      setFormData({
+        customer: '',
+        qty1000ml: '',
+        qty500ml: '',
+        qty100ml: '',
+        rate1000ml: '',
+        rate500ml: '',
+        rate100ml: '',
+        paid: '',
+        paymentMode: 'Cash'
+      })
+    }
   }
 
   return (
@@ -231,7 +243,7 @@ const AddOrderForm = ({ onSubmit, onCancel }) => {
           type="submit"
           className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition font-medium"
         >
-          Create Order
+          {isEdit ? 'Update Order' : 'Create Order'}
         </button>
       </div>
     </form>

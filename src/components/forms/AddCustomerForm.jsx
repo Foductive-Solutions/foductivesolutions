@@ -1,7 +1,25 @@
 import React, { useState } from 'react'
 
-const AddCustomerForm = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
+const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
+  const getInitialRate = (value) => {
+    if (!value) return ''
+    if (typeof value === 'string' && value.startsWith('₹')) {
+      return value.replace('₹ ', '').trim()
+    }
+    return value
+  }
+
+  const [formData, setFormData] = useState(initialData ? {
+    shopName: initialData.shopName || '',
+    billingPerson: initialData.billingPerson || '',
+    mobile: initialData.mobile || '',
+    location: initialData.location || '',
+    customized: initialData.customized || 'No',
+    rate1000ml: getInitialRate(initialData.rate1000ml),
+    rate500ml: getInitialRate(initialData.rate500ml),
+    rate100ml: getInitialRate(initialData.rate100ml),
+    frequency: initialData.frequency || 'Weekly'
+  } : {
     shopName: '',
     billingPerson: '',
     mobile: '',
@@ -28,17 +46,19 @@ const AddCustomerForm = ({ onSubmit, onCancel }) => {
       return
     }
     onSubmit(formData)
-    setFormData({
-      shopName: '',
-      billingPerson: '',
-      mobile: '',
-      location: '',
-      customized: 'No',
-      rate1000ml: '',
-      rate500ml: '',
-      rate100ml: '',
-      frequency: 'Weekly'
-    })
+    if (!isEdit) {
+      setFormData({
+        shopName: '',
+        billingPerson: '',
+        mobile: '',
+        location: '',
+        customized: 'No',
+        rate1000ml: '',
+        rate500ml: '',
+        rate100ml: '',
+        frequency: 'Weekly'
+      })
+    }
   }
 
   return (
@@ -200,7 +220,7 @@ const AddCustomerForm = ({ onSubmit, onCancel }) => {
           type="submit"
           className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition font-medium"
         >
-          Add Customer
+          {isEdit ? 'Update Customer' : 'Add Customer'}
         </button>
       </div>
     </form>

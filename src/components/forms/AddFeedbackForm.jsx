@@ -1,7 +1,13 @@
 import React, { useState } from 'react'
 
-const AddFeedbackForm = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
+const AddFeedbackForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
+  const [formData, setFormData] = useState(initialData ? {
+    customerName: initialData.customerName || '',
+    contactPerson: initialData.contactPerson || '',
+    rating: initialData.rating || 5,
+    category: initialData.category || 'Service Quality',
+    message: initialData.message || ''
+  } : {
     customerName: '',
     contactPerson: '',
     rating: 5,
@@ -24,13 +30,15 @@ const AddFeedbackForm = ({ onSubmit, onCancel }) => {
       return
     }
     onSubmit(formData)
-    setFormData({
-      customerName: '',
-      contactPerson: '',
-      rating: 5,
-      category: 'Service Quality',
-      message: ''
-    })
+    if (!isEdit) {
+      setFormData({
+        customerName: '',
+        contactPerson: '',
+        rating: 5,
+        category: 'Service Quality',
+        message: ''
+      })
+    }
   }
 
   return (
@@ -140,7 +148,7 @@ const AddFeedbackForm = ({ onSubmit, onCancel }) => {
           type="submit"
           className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition font-medium"
         >
-          Submit Feedback
+          {isEdit ? 'Update Feedback' : 'Submit Feedback'}
         </button>
       </div>
     </form>

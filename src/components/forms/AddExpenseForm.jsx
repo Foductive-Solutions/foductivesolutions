@@ -1,7 +1,13 @@
 import React, { useState } from 'react'
 
-const AddExpenseForm = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
+const AddExpenseForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
+  const [formData, setFormData] = useState(initialData ? {
+    name: initialData.name || '',
+    category: initialData.category || 'Petrol',
+    amount: initialData.amount || '',
+    date: initialData.date || new Date().toISOString().split('T')[0],
+    paymentMode: initialData.paymentMode || 'Cash'
+  } : {
     name: '',
     category: 'Petrol',
     amount: '',
@@ -24,13 +30,15 @@ const AddExpenseForm = ({ onSubmit, onCancel }) => {
       return
     }
     onSubmit(formData)
-    setFormData({
-      name: '',
-      category: 'Petrol',
-      amount: '',
-      date: new Date().toISOString().split('T')[0],
-      paymentMode: 'Cash'
-    })
+    if (!isEdit) {
+      setFormData({
+        name: '',
+        category: 'Petrol',
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+        paymentMode: 'Cash'
+      })
+    }
   }
 
   return (
@@ -136,7 +144,7 @@ const AddExpenseForm = ({ onSubmit, onCancel }) => {
           type="submit"
           className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition font-medium"
         >
-          Add Expense
+          {isEdit ? 'Update Expense' : 'Add Expense'}
         </button>
       </div>
     </form>
