@@ -269,6 +269,7 @@ const Expenses = () => {
             initialData={editingExpense}
             isEdit
             onSubmit={handleEditExpense}
+            onCancel={() => setEditingExpense(null)}
           />
         )}
       </Modal>

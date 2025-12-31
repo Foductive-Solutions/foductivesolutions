@@ -264,6 +264,7 @@ const Feedback = () => {
             initialData={editingFeedback}
             isEdit
             onSubmit={handleEditFeedback}
+            onCancel={() => setEditingFeedback(null)}
           />
         )}
       </Modal>

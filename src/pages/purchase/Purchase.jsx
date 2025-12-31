@@ -477,6 +477,7 @@ const Purchase = () => {
             initialData={editingPurchase} 
             isEdit={true}
             onSubmit={handleEditPurchase}
+            onCancel={() => setEditingPurchase(null)}
           />
         )}
       </Modal>

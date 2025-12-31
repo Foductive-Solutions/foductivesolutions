@@ -23,7 +23,7 @@ if (!firebaseConfig.projectId) {
 }
 
 
-console.log(firebaseConfig)
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 

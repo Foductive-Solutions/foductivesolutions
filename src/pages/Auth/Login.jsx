@@ -54,7 +54,7 @@ const Login = () => {
         {/* Logo Section */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-teal-400 mb-2">
-            Foductive
+            Foductive Solutions
           </h1>
           <p className="text-slate-400">
             Aarich Water Bottles Management System

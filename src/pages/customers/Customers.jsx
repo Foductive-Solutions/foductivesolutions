@@ -217,6 +217,7 @@ const Customers = () => {
             initialData={editingCustomer}
             isEdit
             onSubmit={handleEditCustomer}
+            onCancel={() => setEditingCustomer(null)}
           />
         )}
       </Modal>
