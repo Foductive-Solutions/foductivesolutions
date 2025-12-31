@@ -5,12 +5,12 @@ import Landing from './pages/landing/Landing'
 import Portfolio from './pages/portfolio/Portfolio'
 import Login from './pages/Auth/Login'
 import Dashboard from './pages/dashboard/Dashboard'
-import Customers from './pages/customers/customers'
 import CustomerDetail from './pages/customers/CustomerDetail'
 import Orders from './pages/orders/Orders'
 import Expenses from './pages/expenses/Expenses'
 import Purchase from './pages/purchase/Purchase'
 import Feedback from './pages/feedback/Feedback'
+import Customers from './pages/customers/Customers'
 
 const App = () => {
   return (
