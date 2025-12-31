@@ -34,9 +34,14 @@ export const addCustomer = async (customerData) => {
 
 export const getCustomers = async () => {
   try {
-    const q = query(collection(db, 'customers'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await getDocs(collection(db, 'customers'));
+    const customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt in memory to avoid requiring Firestore index
+    return customers.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error fetching customers:', error);
     throw error;
@@ -97,9 +102,14 @@ export const addOrder = async (orderData) => {
 
 export const getOrders = async () => {
   try {
-    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await getDocs(collection(db, 'orders'));
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt in memory to avoid requiring Firestore index
+    return orders.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error fetching orders:', error);
     throw error;
@@ -108,13 +118,21 @@ export const getOrders = async () => {
 
 export const getOrdersByCustomer = async (customerId) => {
   try {
-    const q = query(
-      collection(db, 'orders'),
-      where('customerId', '==', customerId),
-      orderBy('createdAt', 'desc')
+    // Get all orders and filter in memory to avoid needing Firestore indexes
+    const snapshot = await getDocs(collection(db, 'orders'));
+    const allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Filter by customerId or by customer name matching the shop
+    const customerOrders = allOrders.filter(order => 
+      order.customerId === customerId || order.customer === customerId
     );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Sort by createdAt
+    return customerOrders.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error fetching orders:', error);
     throw error;
@@ -175,9 +193,14 @@ export const addExpense = async (expenseData) => {
 
 export const getExpenses = async () => {
   try {
-    const q = query(collection(db, 'expenses'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await getDocs(collection(db, 'expenses'));
+    const expenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt in memory to avoid requiring Firestore index
+    return expenses.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error fetching expenses:', error);
     throw error;
@@ -224,9 +247,14 @@ export const addPurchase = async (purchaseData) => {
 
 export const getPurchases = async () => {
   try {
-    const q = query(collection(db, 'purchases'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await getDocs(collection(db, 'purchases'));
+    const purchases = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt in memory to avoid requiring Firestore index
+    return purchases.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error fetching purchases:', error);
     throw error;
@@ -273,9 +301,14 @@ export const addFeedback = async (feedbackData) => {
 
 export const getFeedback = async () => {
   try {
-    const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await getDocs(collection(db, 'feedback'));
+    const feedback = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt in memory to avoid requiring Firestore index
+    return feedback.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error fetching feedback:', error);
     throw error;

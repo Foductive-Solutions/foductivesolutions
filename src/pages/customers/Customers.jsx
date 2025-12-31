@@ -1,102 +1,109 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Modal from '../../components/Modal'
 import AddCustomerForm from '../../components/forms/AddCustomerForm'
+import { getCustomers, addCustomer, updateCustomer, deleteCustomer } from '../../firebase/services'
 
 const Customers = () => {
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      shopName: 'Hotel Sai Palace',
-      billingPerson: 'Mr. Rajesh Kumar',
-      mobile: '+91 98765 43210',
-      location: 'Sector 5, Downtown',
-      customized: 'Yes',
-      rate1000ml: '₹ 45',
-      rate500ml: '₹ 25',
-      rate100ml: '₹ 8',
-      frequency: 'Bi-weekly'
-    },
-    {
-      id: 2,
-      shopName: 'Green Leaf Cafe',
-      billingPerson: 'Ms. Priya Singh',
-      mobile: '+91 98765 43211',
-      location: 'Market Road, City Center',
-      customized: 'No',
-      rate1000ml: '₹ 42',
-      rate500ml: '₹ 23',
-      rate100ml: '₹ 7',
-      frequency: 'Weekly'
-    },
-    {
-      id: 3,
-      shopName: 'Royal Mess',
-      billingPerson: 'Mr. Vikram Patel',
-      mobile: '+91 98765 43212',
-      location: 'JP Road, East Wing',
-      customized: 'Yes',
-      rate1000ml: '₹ 48',
-      rate500ml: '₹ 26',
-      rate100ml: '₹ 9',
-      frequency: 'Tri-weekly'
-    }
-  ])
-
+  const [customers, setCustomers] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
+  // Fetch customers from Firebase on mount
+  useEffect(() => {
+    fetchCustomers()
+  }, [])
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true)
+      const data = await getCustomers()
+      setCustomers(data)
+    } catch (error) {
+      console.error('Error fetching customers:', error)
+      alert('Error loading customers. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filteredCustomers = customers.filter(
     (customer) =>
-      customer.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.mobile.includes(searchTerm)
+      customer.shopName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.mobile?.includes(searchTerm)
   )
 
-  const handleAddCustomer = (formData) => {
-    const newCustomer = {
-      id: customers.length + 1,
-      ...formData,
-      rate1000ml: formData.rate1000ml ? `₹ ${formData.rate1000ml}` : '₹ 0',
-      rate500ml: formData.rate500ml ? `₹ ${formData.rate500ml}` : '₹ 0',
-      rate100ml: formData.rate100ml ? `₹ ${formData.rate100ml}` : '₹ 0'
+  const handleAddCustomer = async (formData) => {
+    try {
+      const customerData = {
+        shopName: formData.shopName,
+        billingPerson: formData.billingPerson,
+        mobile: formData.mobile,
+        location: formData.location,
+        customized: formData.customized || 'No',
+        rate1000ml: formData.rate1000ml ? `₹ ${formData.rate1000ml}` : '₹ 0',
+        rate500ml: formData.rate500ml ? `₹ ${formData.rate500ml}` : '₹ 0',
+        rate100ml: formData.rate100ml ? `₹ ${formData.rate100ml}` : '₹ 0',
+        frequency: formData.frequency || 'Weekly'
+      }
+      
+      await addCustomer(customerData)
+      await fetchCustomers() // Refresh the list
+      setIsModalOpen(false)
+      alert('Customer added successfully!')
+    } catch (error) {
+      console.error('Error adding customer:', error)
+      alert('Error adding customer. Please try again.')
     }
-    setCustomers([...customers, newCustomer])
-    setIsModalOpen(false)
-    alert('Customer added successfully!')
   }
 
-  const handleDeleteCustomer = () => {
+  const handleDeleteCustomer = async () => {
     if (!deleteConfirm) return
-    setCustomers((prev) => prev.filter((c) => c.id !== deleteConfirm))
-    setDeleteConfirm(null)
-    alert('Customer deleted successfully!')
+    try {
+      await deleteCustomer(deleteConfirm)
+      await fetchCustomers() // Refresh the list
+      setDeleteConfirm(null)
+      alert('Customer deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting customer:', error)
+      alert('Error deleting customer. Please try again.')
+    }
   }
 
-  const handleEditCustomer = (updatedData) => {
-    setCustomers((prev) =>
-      prev.map((c) =>
-        c.id === editingCustomer.id
-          ? {
-              ...c,
-              ...updatedData,
-              rate1000ml: updatedData.rate1000ml
-                ? `₹ ${updatedData.rate1000ml}`
-                : '₹ 0',
-              rate500ml: updatedData.rate500ml
-                ? `₹ ${updatedData.rate500ml}`
-                : '₹ 0',
-              rate100ml: updatedData.rate100ml
-                ? `₹ ${updatedData.rate100ml}`
-                : '₹ 0'
-            }
-          : c
-      )
+  const handleEditCustomer = async (updatedData) => {
+    try {
+      const customerData = {
+        shopName: updatedData.shopName,
+        billingPerson: updatedData.billingPerson,
+        mobile: updatedData.mobile,
+        location: updatedData.location,
+        customized: updatedData.customized || 'No',
+        rate1000ml: updatedData.rate1000ml ? `₹ ${updatedData.rate1000ml}` : '₹ 0',
+        rate500ml: updatedData.rate500ml ? `₹ ${updatedData.rate500ml}` : '₹ 0',
+        rate100ml: updatedData.rate100ml ? `₹ ${updatedData.rate100ml}` : '₹ 0',
+        frequency: updatedData.frequency || 'Weekly'
+      }
+      
+      await updateCustomer(editingCustomer.id, customerData)
+      await fetchCustomers() // Refresh the list
+      setEditingCustomer(null)
+      setIsModalOpen(false)
+      alert('Customer updated successfully!')
+    } catch (error) {
+      console.error('Error updating customer:', error)
+      alert('Error updating customer. Please try again.')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-teal-400 text-lg">Loading customers...</div>
+      </div>
     )
-    setEditingCustomer(null)
-    setIsModalOpen(false)
-    alert('Customer updated successfully!')
   }
 
   return (
@@ -143,7 +150,14 @@ const Customers = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {filteredCustomers.map((customer) => (
+            {filteredCustomers.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="px-4 py-8 text-center text-slate-400">
+                  No customers found. Add your first customer!
+                </td>
+              </tr>
+            ) : (
+              filteredCustomers.map((customer) => (
               <tr key={customer.id} className="hover:bg-slate-800">
                 <td className="px-4 py-3 text-teal-400 font-medium">
                   {customer.shopName}
@@ -174,7 +188,8 @@ const Customers = () => {
                   </button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>
@@ -214,7 +229,7 @@ const Customers = () => {
       >
         <div className="space-y-4">
           <p>
-            Are you sure you want to delete customer #{deleteConfirm}?
+            Are you sure you want to delete this customer?
           </p>
           <div className="flex justify-end gap-3">
             <button

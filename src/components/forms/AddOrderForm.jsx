@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 
-const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
+const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false, customers = [] }) => {
   const [formData, setFormData] = useState(initialData ? {
     customer: initialData.customer || '',
     qty1000ml: initialData.qty1000ml || '',
@@ -84,9 +84,11 @@ const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }
             required
           >
             <option value="">Select a customer</option>
-            <option value="Hotel Sai Palace">Hotel Sai Palace</option>
-            <option value="Green Leaf Cafe">Green Leaf Cafe</option>
-            <option value="Royal Mess">Royal Mess</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.shopName}>
+                {c.shopName} - {c.billingPerson}
+              </option>
+            ))}
           </select>
         </div>
 

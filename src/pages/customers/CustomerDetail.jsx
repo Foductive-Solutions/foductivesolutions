@@ -1,73 +1,78 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { getCustomerById, getOrdersByCustomer } from '../../firebase/services'
 
 const CustomerDetail = () => {
   const { id } = useParams()
+  const [loading, setLoading] = useState(true)
+  const [customerData, setCustomerData] = useState(null)
+  const [orders, setOrders] = useState([])
 
-  const [customerData] = useState({
-    id: 1,
-    shopName: "Hotel Sai Palace",
-    billingPerson: "Mr. Rajesh Kumar",
-    mobile: "+91 98765 43210",
-    location: "Sector 5, Downtown",
-    customized: "Yes",
-    rate1000ml: 45,
-    rate500ml: 25,
-    rate100ml: 8,
-    frequency: "Bi-weekly",
-    overallSales: "₹ 1,85,000",
-    todaySales: "₹ 3,200",
-    orders: [
-      {
-        orderId: "ORD-1023",
-        date: "05 Feb 2026",
-        qty1000ml: 50,
-        qty500ml: 30,
-        qty100ml: 100,
-        rate1000ml: 45,
-        rate500ml: 25,
-        rate100ml: 8,
-        totalBill: "₹ 3,200",
-        paid: "₹ 2,000",
-        remaining: "₹ 1,200",
-        paymentMode: "Cash"
-      },
-      {
-        orderId: "ORD-1020",
-        date: "03 Feb 2026",
-        qty1000ml: 40,
-        qty500ml: 25,
-        qty100ml: 80,
-        rate1000ml: 45,
-        rate500ml: 25,
-        rate100ml: 8,
-        totalBill: "₹ 2,600",
-        paid: "₹ 2,600",
-        remaining: "₹ 0",
-        paymentMode: "Check"
-      },
-      {
-        orderId: "ORD-1018",
-        date: "01 Feb 2026",
-        qty1000ml: 35,
-        qty500ml: 20,
-        qty100ml: 60,
-        rate1000ml: 45,
-        rate500ml: 25,
-        rate100ml: 8,
-        totalBill: "₹ 2,200",
-        paid: "₹ 1,500",
-        remaining: "₹ 700",
-        paymentMode: "UPI"
-      },
-    ]
-  })
+  useEffect(() => {
+    fetchCustomerData()
+  }, [id])
 
-  const [stockData] = useState([
-    { size: "1000ml", sold: 500, current: 250, value: "₹ 11,250" },
-    { size: "500ml", sold: 800, current: 450, value: "₹ 11,250" },
-    { size: "100ml", sold: 1200, current: 300, value: "₹ 2,400" },
-  ])
+  const fetchCustomerData = async () => {
+    try {
+      setLoading(true)
+      const customer = await getCustomerById(id)
+      if (customer) {
+        setCustomerData(customer)
+        // Try to fetch orders for this customer by ID and by shopName
+        try {
+          // First try by customer ID
+          let customerOrders = await getOrdersByCustomer(id)
+          // If no orders found by ID, try by shopName
+          if (customerOrders.length === 0 && customer.shopName) {
+            customerOrders = await getOrdersByCustomer(customer.shopName)
+          }
+          setOrders(customerOrders)
+        } catch (err) {
+          console.log('No orders found for customer')
+          setOrders([])
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching customer:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Calculate totals from orders
+  const totalBill = orders.reduce((sum, o) => sum + (o.totalBill || 0), 0)
+  const totalPaid = orders.reduce((sum, o) => sum + (o.paid || 0), 0)
+  const totalRemaining = orders.reduce((sum, o) => sum + (o.remaining || 0), 0)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-teal-400 text-lg">Loading customer details...</div>
+      </div>
+    )
+  }
+
+  if (!customerData) {
+    return (
+      <div className="space-y-6 text-slate-200">
+        <Link to="/customers" className="text-teal-400 hover:text-teal-300 mb-2 inline-block">
+          ← Back to Customers
+        </Link>
+        <div className="text-center text-slate-400 py-8">
+          Customer not found.
+        </div>
+      </div>
+    )
+  }
+
+  // Parse rates from string format
+  const parseRate = (rateStr) => {
+    if (typeof rateStr === 'number') return rateStr
+    if (typeof rateStr === 'string') {
+      return parseInt(rateStr.replace(/[₹\s,]/g, '')) || 0
+    }
+    return 0
+  }
 
   return (
     <div className="space-y-6 text-slate-200">
@@ -125,53 +130,48 @@ const CustomerDetail = () => {
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-sm text-slate-400">Overall Sales</p>
           <h3 className="text-2xl font-semibold text-white mt-1">
-            {customerData.overallSales}
+            ₹ {totalBill.toLocaleString()}
           </h3>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-sm text-slate-400">Today's Sales</p>
+          <p className="text-sm text-slate-400">Total Paid</p>
           <h3 className="text-2xl font-semibold text-green-400 mt-1">
-            {customerData.todaySales}
+            ₹ {totalPaid.toLocaleString()}
           </h3>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-sm text-slate-400">Rates</p>
           <div className="mt-2 text-sm">
-            <p className="text-teal-400">1000ml: ₹{customerData.rate1000ml}</p>
-            <p className="text-teal-400">500ml: ₹{customerData.rate500ml}</p>
-            <p className="text-teal-400">100ml: ₹{customerData.rate100ml}</p>
+            <p className="text-teal-400">1000ml: {customerData.rate1000ml}</p>
+            <p className="text-teal-400">500ml: {customerData.rate500ml}</p>
+            <p className="text-teal-400">100ml: {customerData.rate100ml}</p>
           </div>
         </div>
       </div>
 
-      {/* Stock Summary */}
-      <div className="bg-slate-900 border border-slate-800 rounded-lg">
-        <div className="px-4 py-3 border-b border-slate-800">
-          <h2 className="text-lg font-medium text-white">
-            Stock Summary
-          </h2>
+      {/* Bills Summary - Moved to top for visibility */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+          <p className="text-sm text-slate-400">Total Bill Amount</p>
+          <h3 className="text-2xl font-semibold text-yellow-400 mt-1">
+            ₹ {totalBill.toLocaleString('en-IN')}
+          </h3>
         </div>
-        <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {stockData.map((stock) => (
-              <div key={stock.size} className="border border-slate-700 rounded-lg p-4">
-                <p className="text-sm text-slate-400">{stock.size}</p>
-                <div className="mt-3 space-y-1 text-sm">
-                  <p className="text-slate-300">
-                    Total Sold: <span className="text-teal-400 font-semibold">{stock.sold}</span>
-                  </p>
-                  <p className="text-slate-300">
-                    Current Stock: <span className="text-yellow-400 font-semibold">{stock.current}</span>
-                  </p>
-                  <p className="text-slate-300">
-                    Value: <span className="text-green-400 font-semibold">{stock.value}</span>
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+          <p className="text-sm text-slate-400">Total Paid</p>
+          <h3 className="text-2xl font-semibold text-green-400 mt-1">
+            ₹ {totalPaid.toLocaleString('en-IN')}
+          </h3>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+          <p className="text-sm text-slate-400">Total Pending</p>
+          <h3 className="text-2xl font-semibold text-red-400 mt-1">
+            ₹ {totalRemaining.toLocaleString('en-IN')}
+          </h3>
         </div>
       </div>
 
@@ -198,45 +198,29 @@ const CustomerDetail = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {customerData.orders.map((order) => (
-                <tr key={order.orderId} className="hover:bg-slate-800 transition">
-                  <td className="px-3 py-2 text-teal-400 font-medium">{order.orderId}</td>
+              {orders.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="px-3 py-8 text-center text-slate-400">
+                    No orders found for this customer.
+                  </td>
+                </tr>
+              ) : (
+                orders.map((order) => (
+                <tr key={order.id || order.orderId} className="hover:bg-slate-800 transition">
+                  <td className="px-3 py-2 text-teal-400 font-medium">{order.orderId || order.id}</td>
                   <td className="px-3 py-2 text-slate-300">{order.date}</td>
                   <td className="px-3 py-2 text-center text-slate-300">{order.qty1000ml}</td>
                   <td className="px-3 py-2 text-center text-slate-300">{order.qty500ml}</td>
                   <td className="px-3 py-2 text-center text-slate-300">{order.qty100ml}</td>
-                  <td className="px-3 py-2 text-right text-yellow-400 font-medium">{order.totalBill}</td>
-                  <td className="px-3 py-2 text-right text-green-400">{order.paid}</td>
-                  <td className="px-3 py-2 text-right text-red-400">{order.remaining}</td>
+                  <td className="px-3 py-2 text-right text-yellow-400 font-medium">₹ {order.totalBill}</td>
+                  <td className="px-3 py-2 text-right text-green-400">₹ {order.paid}</td>
+                  <td className="px-3 py-2 text-right text-red-400">₹ {order.remaining}</td>
                   <td className="px-3 py-2 text-slate-300">{order.paymentMode}</td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Bills Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-sm text-slate-400">Total Bill Amount</p>
-          <h3 className="text-2xl font-semibold text-yellow-400 mt-1">
-            ₹ 8,000
-          </h3>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-sm text-slate-400">Total Paid</p>
-          <h3 className="text-2xl font-semibold text-green-400 mt-1">
-            ₹ 6,100
-          </h3>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-sm text-slate-400">Total Pending</p>
-          <h3 className="text-2xl font-semibold text-red-400 mt-1">
-            ₹ 1,900
-          </h3>
         </div>
       </div>
     </div>

@@ -1,47 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Modal from '../../components/Modal'
 import AddFeedbackForm from '../../components/forms/AddFeedbackForm'
+import { getFeedback, addFeedback, updateFeedback, deleteFeedback } from '../../firebase/services'
 
 const Feedback = () => {
-  const [feedbacks, setFeedbacks] = useState([
-    {
-      id: 1,
-      customerName: 'Hotel Sai Palace',
-      contactPerson: 'Mr. Rajesh Kumar',
-      rating: 5,
-      date: '05 Feb 2026',
-      message: 'Excellent service and product quality. Delivery is always on time.',
-      category: 'Service Quality'
-    },
-    {
-      id: 2,
-      customerName: 'Green Leaf Cafe',
-      contactPerson: 'Ms. Priya Singh',
-      rating: 4,
-      date: '04 Feb 2026',
-      message: 'Good quality bottles, but would appreciate faster delivery times.',
-      category: 'Delivery'
-    },
-    {
-      id: 3,
-      customerName: 'Royal Mess',
-      contactPerson: 'Mr. Vikram Patel',
-      rating: 5,
-      date: '03 Feb 2026',
-      message:
-        'Outstanding! The customized bottles are perfect for our brand. Will order more.',
-      category: 'Product Quality'
-    },
-    {
-      id: 4,
-      customerName: 'Hotel Sai Palace',
-      contactPerson: 'Mr. Rajesh Kumar',
-      rating: 4,
-      date: '01 Feb 2026',
-      message: 'Product is great but pricing could be more competitive.',
-      category: 'Pricing'
-    }
-  ])
+  const [feedbacks, setFeedbacks] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const [filter, setFilter] = useState('all')
   const [expandedId, setExpandedId] = useState(null)
@@ -49,44 +13,76 @@ const Feedback = () => {
   const [editingFeedback, setEditingFeedback] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
-  const handleAddFeedback = (formData) => {
-    const newFeedback = {
-      id: feedbacks.length + 1,
-      customerName: formData.customerName,
-      contactPerson: formData.contactPerson || 'N/A',
-      rating: parseInt(formData.rating, 10) || 5,
-      date: new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      }),
-      message: formData.message,
-      category: formData.category
+  useEffect(() => {
+    fetchFeedbacks()
+  }, [])
+
+  const fetchFeedbacks = async () => {
+    try {
+      setLoading(true)
+      const data = await getFeedback()
+      setFeedbacks(data)
+    } catch (error) {
+      console.error('Error fetching feedbacks:', error)
+      alert('Error loading feedbacks. Please try again.')
+    } finally {
+      setLoading(false)
     }
-
-    setFeedbacks([newFeedback, ...feedbacks])
-    setIsModalOpen(false)
-    alert('Feedback added successfully!')
   }
 
-  const handleDeleteFeedback = () => {
+  const handleAddFeedback = async (formData) => {
+    try {
+      const newFeedback = {
+        customerName: formData.customerName,
+        contactPerson: formData.contactPerson || 'N/A',
+        rating: parseInt(formData.rating, 10) || 5,
+        date: new Date().toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }),
+        message: formData.message,
+        category: formData.category
+      }
+
+      await addFeedback(newFeedback)
+      await fetchFeedbacks()
+      setIsModalOpen(false)
+      alert('Feedback added successfully!')
+    } catch (error) {
+      console.error('Error adding feedback:', error)
+      alert('Error adding feedback. Please try again.')
+    }
+  }
+
+  const handleDeleteFeedback = async () => {
     if (!deleteConfirm) return
-    setFeedbacks((prev) => prev.filter((f) => f.id !== deleteConfirm))
-    setDeleteConfirm(null)
-    alert('Feedback deleted successfully!')
+    try {
+      await deleteFeedback(deleteConfirm)
+      await fetchFeedbacks()
+      setDeleteConfirm(null)
+      alert('Feedback deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting feedback:', error)
+      alert('Error deleting feedback. Please try again.')
+    }
   }
 
-  const handleEditFeedback = (updatedData) => {
-    const updatedFeedbacks = feedbacks.map((f) =>
-      f.id === editingFeedback.id
-        ? { ...f, ...updatedData, rating: parseInt(updatedData.rating, 10) || 5 }
-        : f
-    )
+  const handleEditFeedback = async (updatedData) => {
+    try {
+      await updateFeedback(editingFeedback.id, {
+        ...updatedData,
+        rating: parseInt(updatedData.rating, 10) || 5
+      })
 
-    setFeedbacks(updatedFeedbacks)
-    setEditingFeedback(null)
-    setIsModalOpen(false)
-    alert('Feedback updated successfully!')
+      await fetchFeedbacks()
+      setEditingFeedback(null)
+      setIsModalOpen(false)
+      alert('Feedback updated successfully!')
+    } catch (error) {
+      console.error('Error updating feedback:', error)
+      alert('Error updating feedback. Please try again.')
+    }
   }
 
   const filteredFeedbacks = feedbacks.filter((fb) => {
@@ -111,10 +107,18 @@ const Feedback = () => {
   const averageRating =
     feedbacks.length > 0
       ? (
-          feedbacks.reduce((sum, fb) => sum + fb.rating, 0) /
+          feedbacks.reduce((sum, fb) => sum + (fb.rating || 0), 0) /
           feedbacks.length
         ).toFixed(1)
       : '0.0'
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-teal-400 text-lg">Loading feedbacks...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 text-slate-200">

@@ -1,62 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Modal from '../../components/Modal'
 import AddPurchaseForm from '../../components/forms/AddPurchaseForm'
+import { getPurchases, addPurchase, updatePurchase, deletePurchase } from '../../firebase/services'
 
 const Purchase = () => {
-  const [purchases, setPurchases] = useState([
-    {
-      id: 1,
-      vendorName: "Water Bottle Industries Ltd",
-      orderDate: "01 Feb 2026",
-      deliveryDate: "05 Feb 2026",
-      qty1000ml: 200,
-      qty500ml: 300,
-      qty100ml: 500,
-      rate1000ml: 35,
-      rate500ml: 18,
-      rate100ml: 5,
-      billingAmount: 13650,
-      paid: 13650,
-      remaining: 0,
-      paymentMode: "Bank Transfer",
-      status: "Delivered"
-    },
-    {
-      id: 2,
-      vendorName: "Premium Plastics Co.",
-      orderDate: "03 Feb 2026",
-      deliveryDate: "08 Feb 2026",
-      qty1000ml: 150,
-      qty500ml: 250,
-      qty100ml: 400,
-      rate1000ml: 34,
-      rate500ml: 17,
-      rate100ml: 5,
-      billingAmount: 11000,
-      paid: 6000,
-      remaining: 5000,
-      paymentMode: "Check",
-      status: "Pending"
-    },
-    {
-      id: 3,
-      vendorName: "Crystal Clear Bottles",
-      orderDate: "02 Feb 2026",
-      deliveryDate: "06 Feb 2026",
-      qty1000ml: 100,
-      qty500ml: 150,
-      qty100ml: 250,
-      rate1000ml: 36,
-      rate500ml: 19,
-      rate100ml: 6,
-      billingAmount: 7350,
-      paid: 7350,
-      remaining: 0,
-      paymentMode: "Cash",
-      status: "Delivered"
-    },
-  ])
-
+  const [purchases, setPurchases] = useState([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [settleModal, setSettleModal] = useState({ isOpen: false, purchaseId: null })
@@ -64,36 +13,63 @@ const Purchase = () => {
   const [editingPurchase, setEditingPurchase] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
-  const handleAddPurchase = (formData) => {
-    const q1 = parseInt(formData.qty1000ml) || 0
-    const q2 = parseInt(formData.qty500ml) || 0
-    const q3 = parseInt(formData.qty100ml) || 0
-    const r1 = parseInt(formData.rate1000ml) || 0
-    const r2 = parseInt(formData.rate500ml) || 0
-    const r3 = parseInt(formData.rate100ml) || 0
-    const totalAmount = q1 * r1 + q2 * r2 + q3 * r3
-    const paid = parseInt(formData.paid) || 0
+  useEffect(() => {
+    fetchPurchases()
+  }, [])
 
-    const newPurchase = {
-      id: purchases.length + 1,
-      vendorName: formData.vendorName,
-      orderDate: formData.orderDate,
-      deliveryDate: formData.deliveryDate,
-      qty1000ml: q1,
-      qty500ml: q2,
-      qty100ml: q3,
-      rate1000ml: r1,
-      rate500ml: r2,
-      rate100ml: r3,
-      billingAmount: totalAmount,
-      paid: paid,
-      remaining: totalAmount - paid,
-      paymentMode: formData.paymentMode,
-      status: paid >= totalAmount ? "Paid" : "Pending"
+  const fetchPurchases = async () => {
+    try {
+      setLoading(true)
+      const data = await getPurchases()
+      setPurchases(data)
+    } catch (error) {
+      console.error('Error fetching purchases:', error)
+      alert('Error loading purchases. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setPurchases([newPurchase, ...purchases])
-    setIsModalOpen(false)
-    alert('Purchase order created successfully!')
+  }
+
+  const handleAddPurchase = async (formData) => {
+    try {
+      const q1 = parseInt(formData.qty1000ml) || 0
+      const q2 = parseInt(formData.qty500ml) || 0
+      const q3 = parseInt(formData.qty100ml) || 0
+      const r1 = parseInt(formData.rate1000ml) || 0
+      const r2 = parseInt(formData.rate500ml) || 0
+      const r3 = parseInt(formData.rate100ml) || 0
+      const totalAmount = q1 * r1 + q2 * r2 + q3 * r3
+      const paid = parseInt(formData.paid) || 0
+
+      const newPurchase = {
+        vendorName: formData.vendorName,
+        orderDate: formData.orderDate || new Date().toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }),
+        deliveryDate: formData.deliveryDate,
+        qty1000ml: q1,
+        qty500ml: q2,
+        qty100ml: q3,
+        rate1000ml: r1,
+        rate500ml: r2,
+        rate100ml: r3,
+        billingAmount: totalAmount,
+        paid: paid,
+        remaining: totalAmount - paid,
+        paymentMode: formData.paymentMode,
+        status: paid >= totalAmount ? "Paid" : "Pending"
+      }
+
+      await addPurchase(newPurchase)
+      await fetchPurchases()
+      setIsModalOpen(false)
+      alert('Purchase order created successfully!')
+    } catch (error) {
+      console.error('Error adding purchase:', error)
+      alert('Error creating purchase order. Please try again.')
+    }
   }
 
   const openSettleModal = (purchaseId) => {
@@ -101,7 +77,7 @@ const Purchase = () => {
     setSettlementAmount('')
   }
 
-  const handleSettlePayment = () => {
+  const handleSettlePayment = async () => {
     const purchase = purchases.find(p => p.id === settleModal.purchaseId)
     if (!purchase) return
     
@@ -111,46 +87,51 @@ const Purchase = () => {
       return
     }
 
-    const updatedPurchases = purchases.map(p => {
-      if (p.id === settleModal.purchaseId) {
-        const newPaid = p.paid + additionalPayment
-        const newRemaining = Math.max(0, p.billingAmount - newPaid)
-        return {
-          ...p,
-          paid: newPaid,
-          remaining: newRemaining,
-          status: newRemaining === 0 ? "Paid" : p.status
-        }
-      }
-      return p
-    })
-    setPurchases(updatedPurchases)
-    setSettleModal({ isOpen: false, purchaseId: null })
-    setSettlementAmount('')
-    alert('Payment recorded successfully!')
+    try {
+      const newPaid = purchase.paid + additionalPayment
+      const newRemaining = Math.max(0, purchase.billingAmount - newPaid)
+      
+      await updatePurchase(settleModal.purchaseId, {
+        paid: newPaid,
+        remaining: newRemaining,
+        status: newRemaining === 0 ? "Paid" : purchase.status
+      })
+
+      await fetchPurchases()
+      setSettleModal({ isOpen: false, purchaseId: null })
+      setSettlementAmount('')
+      alert('Payment recorded successfully!')
+    } catch (error) {
+      console.error('Error settling payment:', error)
+      alert('Error recording payment. Please try again.')
+    }
   }
 
-  const handleDeletePurchase = () => {
+  const handleDeletePurchase = async () => {
     if (!deleteConfirm) return
-    const updatedPurchases = purchases.filter(p => p.id !== deleteConfirm)
-    setPurchases(updatedPurchases)
-    setDeleteConfirm(null)
-    alert('Purchase order deleted successfully!')
+    try {
+      await deletePurchase(deleteConfirm)
+      await fetchPurchases()
+      setDeleteConfirm(null)
+      alert('Purchase order deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting purchase:', error)
+      alert('Error deleting purchase order. Please try again.')
+    }
   }
 
-  const handleEditPurchase = (updatedData) => {
-    const q1 = parseInt(updatedData.qty1000ml) || 0
-    const q2 = parseInt(updatedData.qty500ml) || 0
-    const q3 = parseInt(updatedData.qty100ml) || 0
-    const r1 = parseInt(updatedData.rate1000ml) || 0
-    const r2 = parseInt(updatedData.rate500ml) || 0
-    const r3 = parseInt(updatedData.rate100ml) || 0
-    const billingAmount = q1 * r1 + q2 * r2 + q3 * r3
-    const paid = parseInt(updatedData.paid) || 0
-    
-    const updatedPurchases = purchases.map(p => 
-      p.id === editingPurchase.id ? { 
-        ...p, 
+  const handleEditPurchase = async (updatedData) => {
+    try {
+      const q1 = parseInt(updatedData.qty1000ml) || 0
+      const q2 = parseInt(updatedData.qty500ml) || 0
+      const q3 = parseInt(updatedData.qty100ml) || 0
+      const r1 = parseInt(updatedData.rate1000ml) || 0
+      const r2 = parseInt(updatedData.rate500ml) || 0
+      const r3 = parseInt(updatedData.rate100ml) || 0
+      const billingAmount = q1 * r1 + q2 * r2 + q3 * r3
+      const paid = parseInt(updatedData.paid) || 0
+      
+      await updatePurchase(editingPurchase.id, {
         ...updatedData,
         qty1000ml: q1,
         qty500ml: q2,
@@ -161,18 +142,30 @@ const Purchase = () => {
         billingAmount: billingAmount,
         paid: paid,
         remaining: Math.max(0, billingAmount - paid)
-      } : p
-    )
-    setPurchases(updatedPurchases)
-    setEditingPurchase(null)
-    setIsModalOpen(false)
-    alert('Purchase order updated successfully!')
+      })
+
+      await fetchPurchases()
+      setEditingPurchase(null)
+      setIsModalOpen(false)
+      alert('Purchase order updated successfully!')
+    } catch (error) {
+      console.error('Error updating purchase:', error)
+      alert('Error updating purchase order. Please try again.')
+    }
   }
 
   const filteredPurchases = purchases.filter(p => {
     if (filter === 'all') return true
-    return p.status.toLowerCase() === filter.toLowerCase()
+    return p.status?.toLowerCase() === filter.toLowerCase()
   })
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-teal-400 text-lg">Loading purchases...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 text-slate-200">
@@ -194,7 +187,7 @@ const Purchase = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-sm text-slate-400">Total Orders</p>
           <h3 className="text-2xl font-semibold text-teal-400 mt-1">
@@ -202,21 +195,27 @@ const Purchase = () => {
           </h3>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+          <p className="text-sm text-slate-400">Total Bottles Delivered</p>
+          <h3 className="text-2xl font-semibold text-blue-400 mt-1">
+            {purchases.reduce((sum, p) => sum + (p.qty1000ml || 0) + (p.qty500ml || 0) + (p.qty100ml || 0), 0).toLocaleString('en-IN')}
+          </h3>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-sm text-slate-400">Total Spent</p>
           <h3 className="text-2xl font-semibold text-yellow-400 mt-1">
-            ₹ {purchases.reduce((sum, p) => sum + p.billingAmount, 0)}
+            ₹ {purchases.reduce((sum, p) => sum + (p.billingAmount || 0), 0).toLocaleString('en-IN')}
           </h3>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-sm text-slate-400">Amount Paid</p>
           <h3 className="text-2xl font-semibold text-green-400 mt-1">
-            ₹ {purchases.reduce((sum, p) => sum + p.paid, 0)}
+            ₹ {purchases.reduce((sum, p) => sum + (p.paid || 0), 0).toLocaleString('en-IN')}
           </h3>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-sm text-slate-400">Amount Pending</p>
           <h3 className="text-2xl font-semibold text-red-400 mt-1">
-            ₹ {purchases.reduce((sum, p) => sum + p.remaining, 0)}
+            ₹ {purchases.reduce((sum, p) => sum + (p.remaining || 0), 0).toLocaleString('en-IN')}
           </h3>
         </div>
       </div>
