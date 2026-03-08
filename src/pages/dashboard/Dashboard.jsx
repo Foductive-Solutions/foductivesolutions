@@ -16,7 +16,7 @@ const Dashboard = () => {
   const [stockOverview, setStockOverview] = useState({
     bottles1000ml: 0,
     bottles500ml: 0,
-    bottles100ml: 0
+    bottles200ml: 0
   });
   const [allOrders, setAllOrders] = useState([]);
   const [allCustomers, setAllCustomers] = useState([]);
@@ -82,14 +82,14 @@ const Dashboard = () => {
       const totalPurchased = {
         bottles1000ml: purchases.reduce((sum, p) => sum + (p.qty1000ml || 0), 0),
         bottles500ml: purchases.reduce((sum, p) => sum + (p.qty500ml || 0), 0),
-        bottles100ml: purchases.reduce((sum, p) => sum + (p.qty100ml || 0), 0)
+        bottles200ml: purchases.reduce((sum, p) => sum + (p.qty200ml || 0), 0)
       };
 
       // Sold from orders
       const totalSold = {
         bottles1000ml: orders.reduce((sum, o) => sum + (o.qty1000ml || 0), 0),
         bottles500ml: orders.reduce((sum, o) => sum + (o.qty500ml || 0), 0),
-        bottles100ml: orders.reduce((sum, o) => sum + (o.qty100ml || 0), 0)
+        bottles200ml: orders.reduce((sum, o) => sum + (o.qty200ml || 0), 0)
       };
 
       setStats({
@@ -117,7 +117,7 @@ const Dashboard = () => {
       setStockOverview({
         bottles1000ml: totalPurchased.bottles1000ml - totalSold.bottles1000ml,
         bottles500ml: totalPurchased.bottles500ml - totalSold.bottles500ml,
-        bottles100ml: totalPurchased.bottles100ml - totalSold.bottles100ml
+        bottles200ml: totalPurchased.bottles200ml - totalSold.bottles200ml
       });
 
     } catch (error) {
@@ -366,8 +366,8 @@ const Dashboard = () => {
             />
             <StockRow
               label="100 ml Bottles"
-              value={stockOverview.bottles100ml.toLocaleString('en-IN')}
-              status={getStockStatus(stockOverview.bottles100ml)}
+              value={stockOverview.bottles200ml.toLocaleString('en-IN')}
+              status={getStockStatus(stockOverview.bottles200ml)}
             />
           </div>
         </div>

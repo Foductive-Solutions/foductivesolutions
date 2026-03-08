@@ -12,10 +12,10 @@ const AddPurchaseForm = ({
           vendorName: initialData.vendorName || '',
           qty1000ml: initialData.qty1000ml || '',
           qty500ml: initialData.qty500ml || '',
-          qty100ml: initialData.qty100ml || '',
+          qty200ml: initialData.qty200ml || '',
           rate1000ml: initialData.rate1000ml || '',
           rate500ml: initialData.rate500ml || '',
-          rate100ml: initialData.rate100ml || '',
+          rate200ml: initialData.rate200ml || '',
           orderDate:
             initialData.orderDate ||
             new Date().toISOString().split('T')[0],
@@ -27,10 +27,10 @@ const AddPurchaseForm = ({
           vendorName: '',
           qty1000ml: '',
           qty500ml: '',
-          qty100ml: '',
+          qty200ml: '',
           rate1000ml: '',
           rate500ml: '',
-          rate100ml: '',
+          rate200ml: '',
           orderDate: new Date().toISOString().split('T')[0],
           deliveryDate: '',
           paid: '',
@@ -49,19 +49,19 @@ const AddPurchaseForm = ({
   const totalAmount = useMemo(() => {
     const q1 = parseInt(formData.qty1000ml) || 0
     const q2 = parseInt(formData.qty500ml) || 0
-    const q3 = parseInt(formData.qty100ml) || 0
+    const q3 = parseInt(formData.qty200ml) || 0
     const r1 = parseInt(formData.rate1000ml) || 0
     const r2 = parseInt(formData.rate500ml) || 0
-    const r3 = parseInt(formData.rate100ml) || 0
+    const r3 = parseInt(formData.rate200ml) || 0
 
     return q1 * r1 + q2 * r2 + q3 * r3
   }, [
     formData.qty1000ml,
     formData.qty500ml,
-    formData.qty100ml,
+    formData.qty200ml,
     formData.rate1000ml,
     formData.rate500ml,
-    formData.rate100ml
+    formData.rate200ml
   ])
 
   const paidAmount = parseInt(formData.paid) || 0
@@ -82,10 +82,10 @@ const AddPurchaseForm = ({
         vendorName: '',
         qty1000ml: '',
         qty500ml: '',
-        qty100ml: '',
+        qty200ml: '',
         rate1000ml: '',
         rate500ml: '',
-        rate100ml: '',
+        rate200ml: '',
         orderDate: new Date().toISOString().split('T')[0],
         deliveryDate: '',
         paid: '',
@@ -113,7 +113,7 @@ const AddPurchaseForm = ({
         </div>
 
         {/* Quantities */}
-        {['1000ml', '500ml', '100ml'].map((size) => (
+        {['1000ml', '500ml', '200ml'].map((size) => (
           <div key={size}>
             <label className="block text-sm font-medium text-slate-300 mb-1">
               Qty {size}
@@ -129,7 +129,7 @@ const AddPurchaseForm = ({
         ))}
 
         {/* Rates */}
-        {['1000ml', '500ml', '100ml'].map((size) => (
+        {['1000ml', '500ml', '200ml'].map((size) => (
           <div key={`rate-${size}`}>
             <label className="block text-sm font-medium text-slate-300 mb-1">
               Rate {size} (₹)

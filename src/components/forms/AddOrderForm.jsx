@@ -3,22 +3,24 @@ import React, { useState, useMemo } from 'react'
 const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false, customers = [] }) => {
   const [formData, setFormData] = useState(initialData ? {
     customer: initialData.customer || '',
+    orderSource: initialData.orderSource || 'vehicle',
     qty1000ml: initialData.qty1000ml || '',
     qty500ml: initialData.qty500ml || '',
-    qty100ml: initialData.qty100ml || '',
+    qty200ml: initialData.qty200ml || '',
     rate1000ml: initialData.rate1000ml || '',
     rate500ml: initialData.rate500ml || '',
-    rate100ml: initialData.rate100ml || '',
+    rate200ml: initialData.rate200ml || '',
     paid: initialData.paid || '',
     paymentMode: initialData.paymentMode || 'Cash'
   } : {
     customer: '',
+    orderSource: 'vehicle',
     qty1000ml: '',
     qty500ml: '',
-    qty100ml: '',
+    qty200ml: '',
     rate1000ml: '',
     rate500ml: '',
-    rate100ml: '',
+    rate200ml: '',
     paid: '',
     paymentMode: 'Cash'
   })
@@ -35,12 +37,12 @@ const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false, 
   const totalBill = useMemo(() => {
     const q1 = parseInt(formData.qty1000ml) || 0
     const q2 = parseInt(formData.qty500ml) || 0
-    const q3 = parseInt(formData.qty100ml) || 0
+    const q3 = parseInt(formData.qty200ml) || 0
     const r1 = parseInt(formData.rate1000ml) || 0
     const r2 = parseInt(formData.rate500ml) || 0
-    const r3 = parseInt(formData.rate100ml) || 0
+    const r3 = parseInt(formData.rate200ml) || 0
     return q1 * r1 + q2 * r2 + q3 * r3
-  }, [formData.qty1000ml, formData.qty500ml, formData.qty100ml, formData.rate1000ml, formData.rate500ml, formData.rate100ml])
+  }, [formData.qty1000ml, formData.qty500ml, formData.qty200ml, formData.rate1000ml, formData.rate500ml, formData.rate200ml])
 
   // Calculate remaining amount
   const paidAmount = parseInt(formData.paid) || 0
@@ -56,12 +58,13 @@ const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false, 
     if (!isEdit) {
       setFormData({
         customer: '',
+        orderSource: 'vehicle',
         qty1000ml: '',
         qty500ml: '',
-        qty100ml: '',
+        qty200ml: '',
         rate1000ml: '',
         rate500ml: '',
-        rate100ml: '',
+        rate200ml: '',
         paid: '',
         paymentMode: 'Cash'
       })
@@ -90,6 +93,47 @@ const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false, 
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Order Source */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Order Source *
+          </label>
+          <div className="flex gap-4">
+            <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border cursor-pointer transition ${
+              formData.orderSource === 'vehicle' 
+                ? 'bg-teal-600/20 border-teal-500 text-teal-400' 
+                : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+            }`}>
+              <input
+                type="radio"
+                name="orderSource"
+                value="vehicle"
+                checked={formData.orderSource === 'vehicle'}
+                onChange={handleChange}
+                className="sr-only"
+              />
+              <span className="text-lg">🚚</span>
+              <span>Vehicle</span>
+            </label>
+            <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border cursor-pointer transition ${
+              formData.orderSource === 'godown' 
+                ? 'bg-blue-600/20 border-blue-500 text-blue-400' 
+                : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+            }`}>
+              <input
+                type="radio"
+                name="orderSource"
+                value="godown"
+                checked={formData.orderSource === 'godown'}
+                onChange={handleChange}
+                className="sr-only"
+              />
+              <span className="text-lg">🏭</span>
+              <span>Godown</span>
+            </label>
+          </div>
         </div>
 
         {/* Qty 1000ml */}
@@ -122,15 +166,15 @@ const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false, 
           />
         </div>
 
-        {/* Qty 100ml */}
+        {/* Qty 200ml */}
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-1">
-            Qty 100ml
+            Qty 200ml
           </label>
           <input
             type="number"
-            name="qty100ml"
-            value={formData.qty100ml}
+            name="qty200ml"
+            value={formData.qty200ml}
             onChange={handleChange}
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
             placeholder="100"
@@ -167,15 +211,15 @@ const AddOrderForm = ({ onSubmit, onCancel, initialData = null, isEdit = false, 
           />
         </div>
 
-        {/* Rate 100ml */}
+        {/* Rate 200ml */}
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-1">
-            Rate 100ml (₹)
+            Rate 200ml (₹)
           </label>
           <input
             type="number"
-            name="rate100ml"
-            value={formData.rate100ml}
+            name="rate200ml"
+            value={formData.rate200ml}
             onChange={handleChange}
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
             placeholder="8"

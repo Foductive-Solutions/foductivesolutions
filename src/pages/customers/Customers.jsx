@@ -46,7 +46,7 @@ const Customers = () => {
         customized: formData.customized || 'No',
         rate1000ml: formData.rate1000ml ? `₹ ${formData.rate1000ml}` : '₹ 0',
         rate500ml: formData.rate500ml ? `₹ ${formData.rate500ml}` : '₹ 0',
-        rate100ml: formData.rate100ml ? `₹ ${formData.rate100ml}` : '₹ 0',
+        rate200ml: formData.rate200ml ? `₹ ${formData.rate200ml}` : '₹ 0',
         frequency: formData.frequency || 'Weekly'
       }
       
@@ -83,7 +83,7 @@ const Customers = () => {
         customized: updatedData.customized || 'No',
         rate1000ml: updatedData.rate1000ml ? `₹ ${updatedData.rate1000ml}` : '₹ 0',
         rate500ml: updatedData.rate500ml ? `₹ ${updatedData.rate500ml}` : '₹ 0',
-        rate100ml: updatedData.rate100ml ? `₹ ${updatedData.rate100ml}` : '₹ 0',
+        rate200ml: updatedData.rate200ml ? `₹ ${updatedData.rate200ml}` : '₹ 0',
         frequency: updatedData.frequency || 'Weekly'
       }
       

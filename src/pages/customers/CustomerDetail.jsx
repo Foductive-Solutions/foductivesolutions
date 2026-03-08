@@ -146,7 +146,7 @@ const CustomerDetail = () => {
           <div className="mt-2 text-sm">
             <p className="text-teal-400">1000ml: {customerData.rate1000ml}</p>
             <p className="text-teal-400">500ml: {customerData.rate500ml}</p>
-            <p className="text-teal-400">100ml: {customerData.rate100ml}</p>
+            <p className="text-teal-400">200ml: {customerData.rate200ml}</p>
           </div>
         </div>
       </div>
@@ -190,7 +190,7 @@ const CustomerDetail = () => {
                 <th className="px-3 py-2 text-left">Date</th>
                 <th className="px-3 py-2 text-center">1000ml</th>
                 <th className="px-3 py-2 text-center">500ml</th>
-                <th className="px-3 py-2 text-center">100ml</th>
+                <th className="px-3 py-2 text-center">200ml</th>
                 <th className="px-3 py-2 text-right">Total Bill</th>
                 <th className="px-3 py-2 text-right">Paid</th>
                 <th className="px-3 py-2 text-right">Remaining</th>
@@ -211,7 +211,7 @@ const CustomerDetail = () => {
                   <td className="px-3 py-2 text-slate-300">{order.date}</td>
                   <td className="px-3 py-2 text-center text-slate-300">{order.qty1000ml}</td>
                   <td className="px-3 py-2 text-center text-slate-300">{order.qty500ml}</td>
-                  <td className="px-3 py-2 text-center text-slate-300">{order.qty100ml}</td>
+                  <td className="px-3 py-2 text-center text-slate-300">{order.qty200ml}</td>
                   <td className="px-3 py-2 text-right text-yellow-400 font-medium">₹ {order.totalBill}</td>
                   <td className="px-3 py-2 text-right text-green-400">₹ {order.paid}</td>
                   <td className="px-3 py-2 text-right text-red-400">₹ {order.remaining}</td>

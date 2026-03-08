@@ -69,7 +69,7 @@ const Portfolio = () => {
               Stock Management
             </h3>
             <p className="text-slate-400">
-              Monitor inventory levels for 1000ml, 500ml, and 100ml bottles and track sales for each customer.
+              Monitor inventory levels for 1000ml, 500ml, and 200ml bottles and track sales for each customer.
             </p>
           </div>
 
@@ -127,7 +127,7 @@ const Portfolio = () => {
               </p>
             </div>
 
-            {/* 100ml */}
+            {/* 200ml */}
             <div className="text-center">
               <div className="text-6xl mb-4">🥤</div>
               <h3 className="text-2xl font-semibold text-teal-400 mb-2">

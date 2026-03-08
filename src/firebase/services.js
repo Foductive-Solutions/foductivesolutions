@@ -352,6 +352,170 @@ export const deleteFeedback = async (feedbackId) => {
   }
 };
 
+// ==================== VEHICLE STOCK ====================
+
+export const addVehicleStock = async (stockData) => {
+  try {
+    const stockRef = await addDoc(collection(db, 'vehicleStock'), {
+      ...stockData,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+    return stockRef.id;
+  } catch (error) {
+    console.error('Error adding vehicle stock:', error);
+    throw error;
+  }
+};
+
+export const getVehicleStock = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, 'vehicleStock'));
+    const stocks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt in memory
+    return stocks.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
+  } catch (error) {
+    console.error('Error fetching vehicle stock:', error);
+    throw error;
+  }
+};
+
+export const getVehicleStockByDate = async (date) => {
+  try {
+    const snapshot = await getDocs(collection(db, 'vehicleStock'));
+    const allStocks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Filter by date
+    const filteredStocks = allStocks.filter(stock => stock.date === date);
+    return filteredStocks.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
+  } catch (error) {
+    console.error('Error fetching vehicle stock by date:', error);
+    throw error;
+  }
+};
+
+export const updateVehicleStock = async (stockId, stockData) => {
+  try {
+    const docRef = doc(db, 'vehicleStock', stockId);
+    await updateDoc(docRef, {
+      ...stockData,
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error updating vehicle stock:', error);
+    throw error;
+  }
+};
+
+export const deleteVehicleStock = async (stockId) => {
+  try {
+    await deleteDoc(doc(db, 'vehicleStock', stockId));
+  } catch (error) {
+    console.error('Error deleting vehicle stock:', error);
+    throw error;
+  }
+};
+
+// Get current vehicle stock summary (total loaded - total sold from vehicle)
+export const getVehicleStockSummary = async () => {
+  try {
+    // Get all vehicle stock entries
+    const stockSnapshot = await getDocs(collection(db, 'vehicleStock'));
+    const stocks = stockSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Get all orders from vehicle
+    const ordersSnapshot = await getDocs(collection(db, 'orders'));
+    const vehicleOrders = ordersSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(order => order.orderSource === 'vehicle');
+    
+    // Calculate totals loaded
+    const totalLoaded = {
+      qty1000ml: stocks.reduce((sum, s) => sum + (s.qty1000ml || 0), 0),
+      qty500ml: stocks.reduce((sum, s) => sum + (s.qty500ml || 0), 0),
+      qty200ml: stocks.reduce((sum, s) => sum + (s.qty200ml || 0), 0)
+    };
+    
+    // Calculate totals sold from vehicle
+    const totalSold = {
+      qty1000ml: vehicleOrders.reduce((sum, o) => sum + (o.qty1000ml || 0), 0),
+      qty500ml: vehicleOrders.reduce((sum, o) => sum + (o.qty500ml || 0), 0),
+      qty200ml: vehicleOrders.reduce((sum, o) => sum + (o.qty200ml || 0), 0)
+    };
+    
+    // Calculate remaining in vehicle
+    const remaining = {
+      qty1000ml: totalLoaded.qty1000ml - totalSold.qty1000ml,
+      qty500ml: totalLoaded.qty500ml - totalSold.qty500ml,
+      qty200ml: totalLoaded.qty200ml - totalSold.qty200ml
+    };
+    
+    return { totalLoaded, totalSold, remaining };
+  } catch (error) {
+    console.error('Error calculating vehicle stock summary:', error);
+    throw error;
+  }
+};
+
+// Get godown stock summary (total purchased - total loaded to vehicle)
+export const getGodownStockSummary = async () => {
+  try {
+    // Get all purchases
+    const purchasesSnapshot = await getDocs(collection(db, 'purchases'));
+    const purchases = purchasesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Get all vehicle stock entries (loaded from godown)
+    const stockSnapshot = await getDocs(collection(db, 'vehicleStock'));
+    const stocks = stockSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Get all orders from godown
+    const ordersSnapshot = await getDocs(collection(db, 'orders'));
+    const godownOrders = ordersSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(order => order.orderSource === 'godown');
+    
+    // Calculate total purchased
+    const totalPurchased = {
+      qty1000ml: purchases.reduce((sum, p) => sum + (p.qty1000ml || 0), 0),
+      qty500ml: purchases.reduce((sum, p) => sum + (p.qty500ml || 0), 0),
+      qty200ml: purchases.reduce((sum, p) => sum + (p.qty200ml || 0), 0)
+    };
+    
+    // Calculate total loaded to vehicle
+    const totalLoadedToVehicle = {
+      qty1000ml: stocks.reduce((sum, s) => sum + (s.qty1000ml || 0), 0),
+      qty500ml: stocks.reduce((sum, s) => sum + (s.qty500ml || 0), 0),
+      qty200ml: stocks.reduce((sum, s) => sum + (s.qty200ml || 0), 0)
+    };
+    
+    // Calculate sold directly from godown
+    const soldFromGodown = {
+      qty1000ml: godownOrders.reduce((sum, o) => sum + (o.qty1000ml || 0), 0),
+      qty500ml: godownOrders.reduce((sum, o) => sum + (o.qty500ml || 0), 0),
+      qty200ml: godownOrders.reduce((sum, o) => sum + (o.qty200ml || 0), 0)
+    };
+    
+    // Calculate remaining in godown
+    const remaining = {
+      qty1000ml: totalPurchased.qty1000ml - totalLoadedToVehicle.qty1000ml - soldFromGodown.qty1000ml,
+      qty500ml: totalPurchased.qty500ml - totalLoadedToVehicle.qty500ml - soldFromGodown.qty500ml,
+      qty200ml: totalPurchased.qty200ml - totalLoadedToVehicle.qty200ml - soldFromGodown.qty200ml
+    };
+    
+    return { totalPurchased, totalLoadedToVehicle, soldFromGodown, remaining };
+  } catch (error) {
+    console.error('Error calculating godown stock summary:', error);
+    throw error;
+  }
+};
+
 // ==================== BATCH OPERATIONS ====================
 
 export const seedDatabase = async (mockData) => {

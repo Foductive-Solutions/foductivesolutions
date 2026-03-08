@@ -13,6 +13,8 @@ import Expenses from './pages/expenses/Expenses'
 import Purchase from './pages/purchase/Purchase'
 import Feedback from './pages/feedback/Feedback'
 import Customers from './pages/customers/Customers'
+import VehicleStock from './pages/vehicleStock/VehicleStock'
+import Reports from './pages/reports/Reports'
 
 const App = () => {
   return (
@@ -32,7 +34,9 @@ const App = () => {
             <Route path='/orders' element={<Orders />} />
             <Route path='/expenses' element={<Expenses />} />
             <Route path='/purchase' element={<Purchase />} />
+            <Route path='/vehicle-stock' element={<VehicleStock />} />
             <Route path='/feedback' element={<Feedback />} />
+            <Route path='/reports' element={<Reports />} />
           </Route>
         </Route>
       </Routes>

@@ -45,10 +45,10 @@ const Orders = () => {
     try {
       const q1 = parseInt(formData.qty1000ml, 10) || 0
       const q2 = parseInt(formData.qty500ml, 10) || 0
-      const q3 = parseInt(formData.qty100ml, 10) || 0
+      const q3 = parseInt(formData.qty200ml, 10) || 0
       const r1 = parseInt(formData.rate1000ml, 10) || 0
       const r2 = parseInt(formData.rate500ml, 10) || 0
-      const r3 = parseInt(formData.rate100ml, 10) || 0
+      const r3 = parseInt(formData.rate200ml, 10) || 0
 
       const totalBill = q1 * r1 + q2 * r2 + q3 * r3
       const paid = parseInt(formData.paid, 10) || 0
@@ -57,17 +57,14 @@ const Orders = () => {
         orderId: `ORD-${Date.now().toString().slice(-4)}`,
         customer: formData.customer,
         customerId: formData.customerId || '',
-        date: new Date().toLocaleDateString('en-IN', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        }),
+        orderSource: formData.orderSource || 'vehicle',
+        date: new Date().toISOString().split('T')[0],
         qty1000ml: q1,
         qty500ml: q2,
-        qty100ml: q3,
+        qty200ml: q3,
         rate1000ml: r1,
         rate500ml: r2,
-        rate100ml: r3,
+        rate200ml: r3,
         totalBill,
         paid,
         remaining: totalBill - paid,

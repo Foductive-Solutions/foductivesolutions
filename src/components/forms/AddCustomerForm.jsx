@@ -17,7 +17,7 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
     customized: initialData.customized || 'No',
     rate1000ml: getInitialRate(initialData.rate1000ml),
     rate500ml: getInitialRate(initialData.rate500ml),
-    rate100ml: getInitialRate(initialData.rate100ml),
+    rate200ml: getInitialRate(initialData.rate200ml),
     frequency: initialData.frequency || 'Weekly'
   } : {
     shopName: '',
@@ -27,7 +27,7 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
     customized: 'No',
     rate1000ml: '',
     rate500ml: '',
-    rate100ml: '',
+    rate200ml: '',
     frequency: 'Weekly'
   })
 
@@ -55,7 +55,7 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
         customized: 'No',
         rate1000ml: '',
         rate500ml: '',
-        rate100ml: '',
+        rate200ml: '',
         frequency: 'Weekly'
       })
     }
@@ -191,15 +191,15 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
           />
         </div>
 
-        {/* Rate 100ml */}
+        {/* Rate 200ml */}
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-1">
-            Rate 100ml (₹)
+            Rate 200ml (₹)
           </label>
           <input
             type="number"
-            name="rate100ml"
-            value={formData.rate100ml}
+            name="rate200ml"
+            value={formData.rate200ml}
             onChange={handleChange}
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
             placeholder="8"

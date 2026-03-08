@@ -38,7 +38,7 @@ const AdminLayout = () => {
         // Calculate statistics
         const totalOrders = customerOrders.length;
         const totalBottles = customerOrders.reduce((sum, o) => 
-          sum + (o.qty1000ml || 0) + (o.qty500ml || 0) + (o.qty100ml || 0), 0
+          sum + (o.qty1000ml || 0) + (o.qty500ml || 0) + (o.qty200ml || 0), 0
         );
         const totalBilled = customerOrders.reduce((sum, o) => 
           sum + (o.totalBill || o.billingAmount || 0), 0
@@ -207,6 +207,20 @@ const AdminLayout = () => {
           </NavLink>
 
           <NavLink
+            to="/vehicle-stock"
+            className={({ isActive }) =>
+              `block px-3 py-2 rounded transition ${
+                isActive
+                  ? "bg-teal-600 text-white"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              } ${sidebarOpen ? "" : "text-center w-full"}`
+            }
+            title="Vehicle Stock"
+          >
+            {sidebarOpen ? "🚚 Vehicle Stock" : "🚚"}
+          </NavLink>
+
+          <NavLink
             to="/feedback"
             className={({ isActive }) =>
               `block px-3 py-2 rounded transition ${
@@ -218,6 +232,20 @@ const AdminLayout = () => {
             title="Feedback"
           >
             {sidebarOpen ? "⭐ Feedback" : "⭐"}
+          </NavLink>
+
+          <NavLink
+            to="/reports"
+            className={({ isActive }) =>
+              `block px-3 py-2 rounded transition ${
+                isActive
+                  ? "bg-teal-600 text-white"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              } ${sidebarOpen ? "" : "text-center w-full"}`
+            }
+            title="Reports"
+          >
+            {sidebarOpen ? "📈 Reports" : "📈"}
           </NavLink>
         </nav>
 

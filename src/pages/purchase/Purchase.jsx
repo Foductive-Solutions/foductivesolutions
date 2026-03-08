@@ -34,10 +34,10 @@ const Purchase = () => {
     try {
       const q1 = parseInt(formData.qty1000ml) || 0
       const q2 = parseInt(formData.qty500ml) || 0
-      const q3 = parseInt(formData.qty100ml) || 0
+      const q3 = parseInt(formData.qty200ml) || 0
       const r1 = parseInt(formData.rate1000ml) || 0
       const r2 = parseInt(formData.rate500ml) || 0
-      const r3 = parseInt(formData.rate100ml) || 0
+      const r3 = parseInt(formData.rate200ml) || 0
       const totalAmount = q1 * r1 + q2 * r2 + q3 * r3
       const paid = parseInt(formData.paid) || 0
 
@@ -51,10 +51,10 @@ const Purchase = () => {
         deliveryDate: formData.deliveryDate,
         qty1000ml: q1,
         qty500ml: q2,
-        qty100ml: q3,
+        qty200ml: q3,
         rate1000ml: r1,
         rate500ml: r2,
-        rate100ml: r3,
+        rate200ml: r3,
         billingAmount: totalAmount,
         paid: paid,
         remaining: totalAmount - paid,
@@ -124,10 +124,10 @@ const Purchase = () => {
     try {
       const q1 = parseInt(updatedData.qty1000ml) || 0
       const q2 = parseInt(updatedData.qty500ml) || 0
-      const q3 = parseInt(updatedData.qty100ml) || 0
+      const q3 = parseInt(updatedData.qty200ml) || 0
       const r1 = parseInt(updatedData.rate1000ml) || 0
       const r2 = parseInt(updatedData.rate500ml) || 0
-      const r3 = parseInt(updatedData.rate100ml) || 0
+      const r3 = parseInt(updatedData.rate200ml) || 0
       const billingAmount = q1 * r1 + q2 * r2 + q3 * r3
       const paid = parseInt(updatedData.paid) || 0
       
@@ -135,10 +135,10 @@ const Purchase = () => {
         ...updatedData,
         qty1000ml: q1,
         qty500ml: q2,
-        qty100ml: q3,
+        qty200ml: q3,
         rate1000ml: r1,
         rate500ml: r2,
-        rate100ml: r3,
+        rate200ml: r3,
         billingAmount: billingAmount,
         paid: paid,
         remaining: Math.max(0, billingAmount - paid)
@@ -197,7 +197,7 @@ const Purchase = () => {
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-sm text-slate-400">Total Bottles Delivered</p>
           <h3 className="text-2xl font-semibold text-blue-400 mt-1">
-            {purchases.reduce((sum, p) => sum + (p.qty1000ml || 0) + (p.qty500ml || 0) + (p.qty100ml || 0), 0).toLocaleString('en-IN')}
+            {purchases.reduce((sum, p) => sum + (p.qty1000ml || 0) + (p.qty500ml || 0) + (p.qty200ml || 0), 0).toLocaleString('en-IN')}
           </h3>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
@@ -249,7 +249,7 @@ const Purchase = () => {
                 <th className="px-3 py-3 text-left">Delivery Date</th>
                 <th className="px-3 py-3 text-center">1000ml</th>
                 <th className="px-3 py-3 text-center">500ml</th>
-                <th className="px-3 py-3 text-center">100ml</th>
+                <th className="px-3 py-3 text-center">200ml</th>
                 <th className="px-3 py-3 text-right">Bill Amount</th>
                 <th className="px-3 py-3 text-right">Paid</th>
                 <th className="px-3 py-3 text-right">Remaining</th>
@@ -280,7 +280,7 @@ const Purchase = () => {
                     {purchase.qty500ml}
                   </td>
                   <td className="px-3 py-3 text-center text-slate-300">
-                    {purchase.qty100ml}
+                    {purchase.qty200ml}
                   </td>
                   <td className="px-3 py-3 text-right text-yellow-400 font-medium">
                     ₹ {purchase.billingAmount}
@@ -388,9 +388,9 @@ const Purchase = () => {
             <p className="text-xs text-slate-500 mt-1">Units</p>
           </div>
           <div className="bg-slate-800 rounded-lg p-4 text-center">
-            <p className="text-sm text-slate-400 mb-2">100ml Bottles</p>
+            <p className="text-sm text-slate-400 mb-2">200ml Bottles</p>
             <h4 className="text-3xl font-bold text-teal-400">
-              {purchases.filter(p => p.status === 'Delivered').reduce((sum, p) => sum + p.qty100ml, 0)}
+              {purchases.filter(p => p.status === 'Delivered').reduce((sum, p) => sum + p.qty200ml, 0)}
             </h4>
             <p className="text-xs text-slate-500 mt-1">Units</p>
           </div>
