@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { getCustomers, getOrders, getExpenses, getPurchases, getFeedback } from "../../firebase/services";
+import { getCustomers, getOrders, getExpenses, getPurchases, getFeedback, getVehicleStockSummary, getGodownStockSummary } from "../../firebase/services";
+
+const LOW_STOCK_THRESHOLD = 10; // Boxes
+const CREDIT_LIMIT = 5000; // Rupees
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -24,6 +27,15 @@ const Dashboard = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState([]);
+  
+  // Alert states
+  const [alerts, setAlerts] = useState({
+    lowStock: [],
+    creditWarnings: [],
+    negativeStock: []
+  });
+  const [vehicleStock, setVehicleStock] = useState(null);
+  const [godownStock, setGodownStock] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -32,12 +44,79 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [customers, orders, expenses, purchases] = await Promise.all([
+      const [customers, orders, expenses, purchases, vehicleSummary, godownSummary] = await Promise.all([
         getCustomers(),
         getOrders(),
         getExpenses(),
-        getPurchases()
+        getPurchases(),
+        getVehicleStockSummary(),
+        getGodownStockSummary()
       ]);
+
+      // Store stock summaries
+      setVehicleStock(vehicleSummary);
+      setGodownStock(godownSummary);
+
+      // Calculate alerts
+      const lowStockAlerts = [];
+      const negativeStockAlerts = [];
+      const creditWarningAlerts = [];
+
+      // Check Vehicle Stock
+      if (vehicleSummary.remaining.qty1000ml < LOW_STOCK_THRESHOLD) {
+        lowStockAlerts.push({ type: 'vehicle', product: '1000ml', count: vehicleSummary.remaining.qty1000ml });
+      }
+      if (vehicleSummary.remaining.qty500ml < LOW_STOCK_THRESHOLD) {
+        lowStockAlerts.push({ type: 'vehicle', product: '500ml', count: vehicleSummary.remaining.qty500ml });
+      }
+      if (vehicleSummary.remaining.qty200ml < LOW_STOCK_THRESHOLD) {
+        lowStockAlerts.push({ type: 'vehicle', product: '200ml', count: vehicleSummary.remaining.qty200ml });
+      }
+
+      // Check Godown Stock
+      if (godownSummary.remaining.qty1000ml < LOW_STOCK_THRESHOLD) {
+        lowStockAlerts.push({ type: 'godown', product: '1000ml', count: godownSummary.remaining.qty1000ml });
+      }
+      if (godownSummary.remaining.qty500ml < LOW_STOCK_THRESHOLD) {
+        lowStockAlerts.push({ type: 'godown', product: '500ml', count: godownSummary.remaining.qty500ml });
+      }
+      if (godownSummary.remaining.qty200ml < LOW_STOCK_THRESHOLD) {
+        lowStockAlerts.push({ type: 'godown', product: '200ml', count: godownSummary.remaining.qty200ml });
+      }
+
+      // Check for negative stock
+      ['qty1000ml', 'qty500ml', 'qty200ml'].forEach(key => {
+        if (vehicleSummary.remaining[key] < 0) {
+          negativeStockAlerts.push({ type: 'vehicle', product: key.replace('qty', ''), count: vehicleSummary.remaining[key] });
+        }
+        if (godownSummary.remaining[key] < 0) {
+          negativeStockAlerts.push({ type: 'godown', product: key.replace('qty', ''), count: godownSummary.remaining[key] });
+        }
+      });
+
+      // Calculate customer pending amounts and check credit limits
+      const customerPending = {};
+      orders.forEach(order => {
+        const customerName = order.customer || order.shopName;
+        if (customerName) {
+          customerPending[customerName] = (customerPending[customerName] || 0) + (order.remaining || 0);
+        }
+      });
+
+      Object.entries(customerPending).forEach(([customer, pending]) => {
+        if (pending > CREDIT_LIMIT) {
+          creditWarningAlerts.push({ customer, pending });
+        }
+      });
+
+      // Sort by highest pending
+      creditWarningAlerts.sort((a, b) => b.pending - a.pending);
+
+      setAlerts({
+        lowStock: lowStockAlerts,
+        creditWarnings: creditWarningAlerts,
+        negativeStock: negativeStockAlerts
+      });
 
       // Calculate today's date
       const today = new Date().toLocaleDateString('en-IN', {
@@ -269,6 +348,66 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* Alerts Section */}
+      {(alerts.negativeStock.length > 0 || alerts.lowStock.length > 0 || alerts.creditWarnings.length > 0) && (
+        <div className="space-y-3">
+          {/* Negative Stock Alert - Critical */}
+          {alerts.negativeStock.length > 0 && (
+            <div className="bg-red-900/40 border border-red-500 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-red-400 text-lg">🚨</span>
+                <h3 className="text-red-400 font-semibold">Critical: Negative Stock Detected!</h3>
+              </div>
+              <div className="text-red-300 text-sm space-y-1">
+                {alerts.negativeStock.map((alert, idx) => (
+                  <p key={idx}>
+                    {alert.type === 'vehicle' ? '🚚' : '🏭'} {alert.type.charAt(0).toUpperCase() + alert.type.slice(1)} - {alert.product}: <span className="font-bold">{alert.count}</span> boxes (Data inconsistency - please check entries)
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Low Stock Alert */}
+          {alerts.lowStock.length > 0 && (
+            <div className="bg-yellow-900/40 border border-yellow-500 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-yellow-400 text-lg">⚠️</span>
+                <h3 className="text-yellow-400 font-semibold">Low Stock Alert</h3>
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm">
+                {alerts.lowStock.map((alert, idx) => (
+                  <span key={idx} className={`px-3 py-1 rounded-full ${alert.count <= 0 ? 'bg-red-900/50 text-red-300' : 'bg-yellow-900/50 text-yellow-300'}`}>
+                    {alert.type === 'vehicle' ? '🚚' : '🏭'} {alert.product}: <strong>{alert.count}</strong> boxes
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Customer Credit Warning */}
+          {alerts.creditWarnings.length > 0 && (
+            <div className="bg-orange-900/40 border border-orange-500 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-orange-400 text-lg">💳</span>
+                <h3 className="text-orange-400 font-semibold">Credit Limit Exceeded (₹{CREDIT_LIMIT}+)</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+                {alerts.creditWarnings.slice(0, 6).map((alert, idx) => (
+                  <div key={idx} className="bg-orange-900/30 rounded px-3 py-2 flex justify-between">
+                    <span className="text-orange-200 truncate">{alert.customer}</span>
+                    <span className="text-orange-400 font-semibold ml-2">₹{alert.pending}</span>
+                  </div>
+                ))}
+              </div>
+              {alerts.creditWarnings.length > 6 && (
+                <p className="text-orange-300 text-xs mt-2">+{alerts.creditWarnings.length - 6} more customers</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Main Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -345,7 +484,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Stock Overview */}
+        {/* Stock Overview - Updated with Vehicle & Godown */}
         <div className="bg-slate-900 border border-slate-800 rounded-lg">
           <div className="px-4 py-3 border-b border-slate-800">
             <h2 className="text-lg font-medium text-white">
@@ -354,21 +493,33 @@ const Dashboard = () => {
           </div>
 
           <div className="p-4 space-y-4">
-            <StockRow
-              label="1000 ml Bottles"
-              value={stockOverview.bottles1000ml.toLocaleString('en-IN')}
-              status={getStockStatus(stockOverview.bottles1000ml)}
-            />
-            <StockRow
-              label="500 ml Bottles"
-              value={stockOverview.bottles500ml.toLocaleString('en-IN')}
-              status={getStockStatus(stockOverview.bottles500ml)}
-            />
-            <StockRow
-              label="100 ml Bottles"
-              value={stockOverview.bottles200ml.toLocaleString('en-IN')}
-              status={getStockStatus(stockOverview.bottles200ml)}
-            />
+            {/* Vehicle Stock */}
+            <div className="mb-4">
+              <p className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                <span>🚚</span> Vehicle Stock
+              </p>
+              {vehicleStock && (
+                <div className="grid grid-cols-3 gap-2">
+                  <StockPill label="1000ml" value={vehicleStock.remaining.qty1000ml} threshold={LOW_STOCK_THRESHOLD} />
+                  <StockPill label="500ml" value={vehicleStock.remaining.qty500ml} threshold={LOW_STOCK_THRESHOLD} />
+                  <StockPill label="200ml" value={vehicleStock.remaining.qty200ml} threshold={LOW_STOCK_THRESHOLD} />
+                </div>
+              )}
+            </div>
+
+            {/* Godown Stock */}
+            <div>
+              <p className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                <span>🏭</span> Godown Stock
+              </p>
+              {godownStock && (
+                <div className="grid grid-cols-3 gap-2">
+                  <StockPill label="1000ml" value={godownStock.remaining.qty1000ml} threshold={LOW_STOCK_THRESHOLD} />
+                  <StockPill label="500ml" value={godownStock.remaining.qty500ml} threshold={LOW_STOCK_THRESHOLD} />
+                  <StockPill label="200ml" value={godownStock.remaining.qty200ml} threshold={LOW_STOCK_THRESHOLD} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -628,6 +779,31 @@ const StockRow = ({ label, value, status }) => {
           {value}
         </span>
       </div>
+    </div>
+  );
+};
+
+// Stock Pill Component for compact display
+const StockPill = ({ label, value, threshold }) => {
+  const isLow = value < threshold;
+  const isNegative = value < 0;
+  
+  const bgColor = isNegative 
+    ? 'bg-red-900/50 border-red-500' 
+    : isLow 
+      ? 'bg-yellow-900/50 border-yellow-500' 
+      : 'bg-green-900/50 border-green-500';
+  
+  const textColor = isNegative 
+    ? 'text-red-400' 
+    : isLow 
+      ? 'text-yellow-400' 
+      : 'text-green-400';
+
+  return (
+    <div className={`rounded-lg border p-2 text-center ${bgColor}`}>
+      <p className="text-xs text-slate-400">{label}</p>
+      <p className={`text-lg font-bold ${textColor}`}>{value}</p>
     </div>
   );
 };
