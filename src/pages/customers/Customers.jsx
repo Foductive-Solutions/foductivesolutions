@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Modal from '../../components/Modal'
 import AddCustomerForm from '../../components/forms/AddCustomerForm'
+import SendMailModal from '../../components/SendMailModal'
 import { getCustomers, addCustomer, updateCustomer, deleteCustomer } from '../../firebase/services'
 
 const Customers = () => {
@@ -11,6 +12,7 @@ const Customers = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [mailCustomer, setMailCustomer] = useState(null)
 
   // Fetch customers from Firebase on mount
   useEffect(() => {
@@ -181,6 +183,12 @@ const Customers = () => {
                     Edit
                   </button>
                   <button
+                    onClick={() => setMailCustomer(customer)}
+                    className="text-yellow-400"
+                  >
+                    📧 Mail
+                  </button>
+                  <button
                     onClick={() => setDeleteConfirm(customer.id)}
                     className="text-red-400"
                   >
@@ -248,6 +256,14 @@ const Customers = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Send Mail Modal */}
+      <SendMailModal
+        isOpen={mailCustomer !== null}
+        onClose={() => setMailCustomer(null)}
+        customer={mailCustomer}
+        mode="both"
+      />
     </div>
   )
 }

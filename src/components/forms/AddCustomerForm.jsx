@@ -13,6 +13,7 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
     shopName: initialData.shopName || '',
     billingPerson: initialData.billingPerson || '',
     mobile: initialData.mobile || '',
+    email: initialData.email || '',
     location: initialData.location || '',
     customized: initialData.customized || 'No',
     rate1000ml: getInitialRate(initialData.rate1000ml),
@@ -23,6 +24,7 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
     shopName: '',
     billingPerson: '',
     mobile: '',
+    email: '',
     location: '',
     customized: 'No',
     rate1000ml: '',
@@ -51,6 +53,7 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
         shopName: '',
         billingPerson: '',
         mobile: '',
+        email: '',
         location: '',
         customized: 'No',
         rate1000ml: '',
@@ -109,6 +112,21 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
             placeholder="+91 98765 43210"
             required
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Email Address
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
+            placeholder="customer@example.com"
           />
         </div>
 

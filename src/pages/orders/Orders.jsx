@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Modal from '../../components/Modal'
 import AddOrderForm from '../../components/forms/AddOrderForm'
+import Invoice from '../../components/Invoice'
 import { getOrders, addOrder, updateOrder, deleteOrder, getCustomers } from '../../firebase/services'
 
 const Orders = () => {
@@ -13,6 +14,15 @@ const Orders = () => {
   const [settlementAmount, setSettlementAmount] = useState('')
   const [editingOrder, setEditingOrder] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  
+  // Date filter state
+  const [dateFilter, setDateFilter] = useState({
+    startDate: '',
+    endDate: ''
+  })
+  
+  // Invoice state
+  const [invoiceOrder, setInvoiceOrder] = useState(null)
 
   useEffect(() => {
     fetchOrders()
@@ -144,9 +154,56 @@ const Orders = () => {
   }
 
   const filteredOrders = orders.filter((order) => {
-    if (filter === 'all') return true
-    return order.status?.toLowerCase() === filter.toLowerCase()
+    // Status filter
+    if (filter !== 'all' && order.status?.toLowerCase() !== filter.toLowerCase()) {
+      return false
+    }
+    
+    // Date filter
+    if (dateFilter.startDate || dateFilter.endDate) {
+      let orderDateStr = order.date
+      if (orderDateStr) {
+        // Parse the order date (could be ISO or localized format)
+        const parsedDate = new Date(orderDateStr)
+        if (!isNaN(parsedDate.getTime())) {
+          orderDateStr = parsedDate.toISOString().split('T')[0]
+        }
+      }
+      
+      if (dateFilter.startDate && orderDateStr < dateFilter.startDate) return false
+      if (dateFilter.endDate && orderDateStr > dateFilter.endDate) return false
+    }
+    
+    return true
   })
+
+  // Quick date filter helpers
+  const setTodayFilter = () => {
+    const today = new Date().toISOString().split('T')[0]
+    setDateFilter({ startDate: today, endDate: today })
+  }
+
+  const setThisWeekFilter = () => {
+    const today = new Date()
+    const firstDay = new Date(today.setDate(today.getDate() - today.getDay()))
+    setDateFilter({ 
+      startDate: firstDay.toISOString().split('T')[0], 
+      endDate: new Date().toISOString().split('T')[0] 
+    })
+  }
+
+  const setThisMonthFilter = () => {
+    const today = new Date()
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+    setDateFilter({ 
+      startDate: firstDay.toISOString().split('T')[0], 
+      endDate: new Date().toISOString().split('T')[0] 
+    })
+  }
+
+  const clearDateFilter = () => {
+    setDateFilter({ startDate: '', endDate: '' })
+  }
 
   if (loading) {
     return (
@@ -175,20 +232,87 @@ const Orders = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 border-b border-slate-800">
+      <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-3">
         {['all', 'completed', 'pending', 'partial'].map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-4 py-3 text-sm border-b-2 ${
+            className={`px-4 py-2 text-sm rounded-lg ${
               filter === tab
-                ? 'border-teal-500 text-teal-400'
-                : 'border-transparent text-slate-400'
+                ? 'bg-teal-600 text-white'
+                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
             }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
+      </div>
+
+      {/* Date Filter */}
+      <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 text-sm">📅 From:</span>
+            <input
+              type="date"
+              value={dateFilter.startDate}
+              onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+              className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm focus:outline-none focus:border-teal-500"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 text-sm">To:</span>
+            <input
+              type="date"
+              value={dateFilter.endDate}
+              onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+              className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm focus:outline-none focus:border-teal-500"
+            />
+          </div>
+          
+          {/* Quick Filters */}
+          <div className="flex gap-2 ml-auto">
+            <button
+              onClick={setTodayFilter}
+              className={`px-3 py-1.5 text-xs rounded ${
+                dateFilter.startDate === new Date().toISOString().split('T')[0] && dateFilter.endDate === new Date().toISOString().split('T')[0]
+                  ? 'bg-teal-600 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              onClick={setThisWeekFilter}
+              className="px-3 py-1.5 text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 rounded"
+            >
+              This Week
+            </button>
+            <button
+              onClick={setThisMonthFilter}
+              className="px-3 py-1.5 text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 rounded"
+            >
+              This Month
+            </button>
+            {(dateFilter.startDate || dateFilter.endDate) && (
+              <button
+                onClick={clearDateFilter}
+                className="px-3 py-1.5 text-xs bg-red-900/50 text-red-400 hover:bg-red-900 rounded"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+        
+        {/* Filter Summary */}
+        {(dateFilter.startDate || dateFilter.endDate) && (
+          <div className="mt-2 text-xs text-slate-500">
+            Showing {filteredOrders.length} order(s) 
+            {dateFilter.startDate && ` from ${dateFilter.startDate}`}
+            {dateFilter.endDate && ` to ${dateFilter.endDate}`}
+          </div>
+        )}
       </div>
 
       {/* Orders Table */}
@@ -228,6 +352,13 @@ const Orders = () => {
                 </td>
                 <td className="px-4 py-3">{order.status}</td>
                 <td className="px-4 py-3 text-center space-x-2">
+                  <button
+                    onClick={() => setInvoiceOrder(order)}
+                    className="text-purple-400 hover:text-purple-300"
+                    title="Print Invoice"
+                  >
+                    🖨️
+                  </button>
                   {order.remaining > 0 && (
                     <button
                       onClick={() => openSettleModal(order.id)}
@@ -343,6 +474,15 @@ const Orders = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Invoice Modal */}
+      {invoiceOrder && (
+        <Invoice
+          order={invoiceOrder}
+          customer={customers.find(c => c.shopName === invoiceOrder.customer)}
+          onClose={() => setInvoiceOrder(null)}
+        />
+      )}
     </div>
   )
 }
