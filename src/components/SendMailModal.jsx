@@ -16,8 +16,11 @@ const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 
   const defaultTab = (mode === 'invoice' && hasOrder) ? 'invoice' : 'custom'
   const [activeTab, setActiveTab] = useState(defaultTab)
 
+  const customerEmail = customer?.email || ''
   // Shared state
-  const [toEmail, setToEmail] = useState(customer?.email || '')
+  const [toEmail, setToEmail] = useState(customerEmail)
+  const [useCustomEmail, setUseCustomEmail] = useState(false)
+  const [overrideEmail, setOverrideEmail] = useState('')
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState(null) // { success, message }
 
@@ -29,23 +32,26 @@ const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 
 
   const resetResult = () => setResult(null)
 
+  // The effective recipient email
+  const effectiveEmail = useCustomEmail ? overrideEmail : toEmail
+
   const handleSendInvoice = async (e) => {
     e.preventDefault()
-    if (!toEmail) return
+    if (!effectiveEmail) return
     setSending(true)
     setResult(null)
-    const res = await sendInvoiceEmail(toEmail, customer, order)
+    const res = await sendInvoiceEmail(effectiveEmail, customer, order)
     setResult(res)
     setSending(false)
   }
 
   const handleSendCustom = async (e) => {
     e.preventDefault()
-    if (!toEmail || !subject || !message) return
+    if (!effectiveEmail || !subject || !message) return
     setSending(true)
     setResult(null)
     const res = await sendCustomEmail(
-      toEmail,
+      effectiveEmail,
       customer?.shopName || customer?.billingPerson || '',
       subject,
       message
@@ -108,14 +114,43 @@ const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 
           {/* Recipient Email — shared */}
           <div>
             <label className={labelClass}>Recipient Email *</label>
-            <input
-              type="email"
-              value={toEmail}
-              onChange={(e) => { setToEmail(e.target.value); resetResult() }}
-              className={inputClass}
-              placeholder="customer@example.com"
-              required
-            />
+            {customerEmail && !useCustomEmail ? (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm">
+                  {customerEmail}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setUseCustomEmail(true); resetResult() }}
+                  className="px-3 py-2 text-xs bg-slate-700 hover:bg-slate-600 text-teal-400 border border-slate-600 rounded-lg transition whitespace-nowrap"
+                >
+                  Use different email
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="email"
+                  value={useCustomEmail ? overrideEmail : toEmail}
+                  onChange={(e) => {
+                    resetResult()
+                    useCustomEmail ? setOverrideEmail(e.target.value) : setToEmail(e.target.value)
+                  }}
+                  className={inputClass}
+                  placeholder="customer@example.com"
+                  required
+                />
+                {customerEmail && (
+                  <button
+                    type="button"
+                    onClick={() => { setUseCustomEmail(false); setOverrideEmail(''); resetResult() }}
+                    className="px-3 py-2 text-xs bg-slate-700 hover:bg-slate-600 text-slate-400 border border-slate-600 rounded-lg transition whitespace-nowrap"
+                  >
+                    Use default
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── INVOICE TAB ─────────────────────────────── */}
@@ -178,7 +213,7 @@ const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 
               <div className="flex gap-3 pt-1">
                 <button
                   type="submit"
-                  disabled={sending || !toEmail}
+                  disabled={sending || !effectiveEmail}
                   className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
                 >
                   {sending ? (
@@ -254,7 +289,7 @@ const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 
               <div className="flex gap-3 pt-1">
                 <button
                   type="submit"
-                  disabled={sending || !toEmail || !subject || !message}
+                  disabled={sending || !effectiveEmail || !subject || !message}
                   className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
                 >
                   {sending ? (
