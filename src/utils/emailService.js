@@ -121,6 +121,7 @@ export const sendCustomEmail = async (toEmail, toName, subject, message) => {
     to_email: toEmail,
     to_name: toName || 'Customer',
     from_name: 'AARICH Team',
+    title: subject,
     subject,
     message,
   }

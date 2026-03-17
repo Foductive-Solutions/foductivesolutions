@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Modal from '../../components/Modal'
 import AddPurchaseForm from '../../components/forms/AddPurchaseForm'
+import VendorOrderRequestModal from '../../components/VendorOrderRequestModal'
 import { getPurchases, addPurchase, updatePurchase, deletePurchase } from '../../firebase/services'
 
 const Purchase = () => {
@@ -8,6 +9,7 @@ const Purchase = () => {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [vendorRequestOpen, setVendorRequestOpen] = useState(false)
   const [settleModal, setSettleModal] = useState({ isOpen: false, purchaseId: null })
   const [settlementAmount, setSettlementAmount] = useState('')
   const [editingPurchase, setEditingPurchase] = useState(null)
@@ -179,11 +181,18 @@ const Purchase = () => {
             Manage vendor purchases and inventory
           </p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
-          + New Purchase Order
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setVendorRequestOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2">
+            📧 Request Order
+          </button>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+            + New Purchase Order
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -509,7 +518,14 @@ const Purchase = () => {
             </div>
           </div>
         )}
-      </Modal>    </div>
+      </Modal>    
+
+      {/* Vendor Order Request Modal */}
+      <VendorOrderRequestModal
+        isOpen={vendorRequestOpen}
+        onClose={() => setVendorRequestOpen(false)}
+      />
+    </div>
   )
 }
 
