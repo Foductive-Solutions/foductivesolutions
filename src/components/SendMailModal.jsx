@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { sendInvoiceEmail, sendCustomEmail } from '../utils/emailService'
+import { sendInvoiceEmail, sendTaxInvoiceEmail, sendCustomEmail } from '../utils/emailService'
 
 /**
  * SendMailModal
@@ -9,9 +9,10 @@ import { sendInvoiceEmail, sendCustomEmail } from '../utils/emailService'
  *  - onClose      {function}  close callback
  *  - customer     {object}    customer object (optional – pre-fills name/email)
  *  - order        {object}    order object    (optional – only used in "invoice" mode)
- *  - mode         {string}    "invoice" | "custom" | "both" (default "both")
+ *  - mode            {string}  "invoice" | "custom" | "both" (default "both")
+ *  - invoiceVariant  {string}  "standard" | "tax" (default "standard")
  */
-const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 'both' }) => {
+const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 'both', invoiceVariant = 'standard' }) => {
   const hasOrder = order !== null && order !== undefined
   const defaultTab = (mode === 'invoice' && hasOrder) ? 'invoice' : 'custom'
   const [activeTab, setActiveTab] = useState(defaultTab)
@@ -40,7 +41,8 @@ const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 
     if (!effectiveEmail) return
     setSending(true)
     setResult(null)
-    const res = await sendInvoiceEmail(effectiveEmail, customer, order)
+    const sendFn = invoiceVariant === 'tax' ? sendTaxInvoiceEmail : sendInvoiceEmail
+    const res = await sendFn(effectiveEmail, customer, order)
     setResult(res)
     setSending(false)
   }
@@ -65,7 +67,7 @@ const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 
   const labelClass = 'block text-sm font-medium text-slate-300 mb-1'
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-lg shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
@@ -219,7 +221,7 @@ const SendMailModal = ({ isOpen, onClose, customer = null, order = null, mode = 
                   {sending ? (
                     <><span className="animate-spin">⏳</span> Sending...</>
                   ) : (
-                    <><span>📧</span> Send Invoice</>
+                    <><span>📧</span> {invoiceVariant === 'tax' ? 'Send Tax Invoice' : 'Send Invoice'}</>
                   )}
                 </button>
                 <button type="button" onClick={onClose} className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition">

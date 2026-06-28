@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Modal from '../../components/Modal'
 import AddOrderForm from '../../components/forms/AddOrderForm'
 import Invoice from '../../components/Invoice'
+import TaxInvoice from '../../components/TaxInvoice'
 import { getOrders, addOrder, updateOrder, deleteOrder, getCustomers } from '../../firebase/services'
 
 const Orders = () => {
@@ -23,6 +24,7 @@ const Orders = () => {
   
   // Invoice state
   const [invoiceOrder, setInvoiceOrder] = useState(null)
+  const [taxInvoiceOrder, setTaxInvoiceOrder] = useState(null)
 
   useEffect(() => {
     fetchOrders()
@@ -353,9 +355,16 @@ const Orders = () => {
                 <td className="px-4 py-3">{order.status}</td>
                 <td className="px-4 py-3 text-center space-x-2">
                   <button
+                    onClick={() => setTaxInvoiceOrder(order)}
+                    className="text-amber-400 hover:text-amber-300 text-xs font-semibold px-1"
+                    title="Tax Invoice"
+                  >
+                    Invoice
+                  </button>
+                  <button
                     onClick={() => setInvoiceOrder(order)}
                     className="text-purple-400 hover:text-purple-300"
-                    title="Print Invoice"
+                    title="Print Receipt"
                   >
                     🖨️
                   </button>
@@ -475,12 +484,21 @@ const Orders = () => {
         </div>
       </Modal>
 
-      {/* Invoice Modal */}
+      {/* Receipt Modal */}
       {invoiceOrder && (
         <Invoice
           order={invoiceOrder}
           customer={customers.find(c => c.shopName === invoiceOrder.customer)}
           onClose={() => setInvoiceOrder(null)}
+        />
+      )}
+
+      {/* Tax Invoice Modal */}
+      {taxInvoiceOrder && (
+        <TaxInvoice
+          order={taxInvoiceOrder}
+          customer={customers.find(c => c.shopName === taxInvoiceOrder.customer)}
+          onClose={() => setTaxInvoiceOrder(null)}
         />
       )}
     </div>

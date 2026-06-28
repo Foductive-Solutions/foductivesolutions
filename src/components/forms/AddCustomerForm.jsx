@@ -15,6 +15,9 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
     mobile: initialData.mobile || '',
     email: initialData.email || '',
     location: initialData.location || '',
+    gstin: initialData.gstin || '',
+    pan: initialData.pan || '',
+    state: initialData.state || '27-Maharashtra',
     customized: initialData.customized || 'No',
     rate1000ml: getInitialRate(initialData.rate1000ml),
     rate500ml: getInitialRate(initialData.rate500ml),
@@ -26,6 +29,9 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
     mobile: '',
     email: '',
     location: '',
+    gstin: '',
+    pan: '',
+    state: '27-Maharashtra',
     customized: 'No',
     rate1000ml: '',
     rate500ml: '',
@@ -55,6 +61,9 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
         mobile: '',
         email: '',
         location: '',
+        gstin: '',
+        pan: '',
+        state: '27-Maharashtra',
         customized: 'No',
         rate1000ml: '',
         rate500ml: '',
@@ -133,7 +142,7 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
         {/* Location */}
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-1">
-            Location
+            Location / Address
           </label>
           <input
             type="text"
@@ -142,6 +151,53 @@ const AddCustomerForm = ({ onSubmit, onCancel, initialData = null, isEdit = fals
             onChange={handleChange}
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
             placeholder="Enter location"
+          />
+        </div>
+
+        {/* GSTIN */}
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            GSTIN
+          </label>
+          <input
+            type="text"
+            name="gstin"
+            value={formData.gstin}
+            onChange={handleChange}
+            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
+            placeholder="27XXXXXXXXXXXX"
+            maxLength={15}
+          />
+        </div>
+
+        {/* PAN */}
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            PAN
+          </label>
+          <input
+            type="text"
+            name="pan"
+            value={formData.pan}
+            onChange={handleChange}
+            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
+            placeholder="XXXXXXXXXX"
+            maxLength={10}
+          />
+        </div>
+
+        {/* State */}
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            State
+          </label>
+          <input
+            type="text"
+            name="state"
+            value={formData.state}
+            onChange={handleChange}
+            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition"
+            placeholder="27-Maharashtra"
           />
         </div>
 
