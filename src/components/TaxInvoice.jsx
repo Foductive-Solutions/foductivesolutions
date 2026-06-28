@@ -179,7 +179,7 @@ const TaxInvoice = ({ order, customer, onClose }) => {
                   <span className="absolute top-2 right-3 text-[10px] italic font-normal text-gray-600">
                     Original for Recipient
                   </span>
-                  <p className="header-title text-xl font-bold tracking-wide">{COMPANY_INFO.name}</p>
+                  <p className="header-title text-xl font-bold tracking-wide">{COMPANY_INFO.legalName}</p>
                   <p className="text-center text-[11px] mt-1">{COMPANY_INFO.registeredAddress}</p>
                   {/* <p className="text-center text-[11px] mt-1">
                     GSTIN: {COMPANY_INFO.gstin} &nbsp;|&nbsp; PAN: {COMPANY_INFO.pan} &nbsp;|&nbsp; State: {COMPANY_INFO.state}

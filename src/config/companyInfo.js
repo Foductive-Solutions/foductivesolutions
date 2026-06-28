@@ -1,7 +1,7 @@
 // Seller / company details shown on tax invoices (update with real values when available)
 export const COMPANY_INFO = {
   name: 'AARICH',
-  legalName: 'FOODUCTIVE SOLUTIONS - AARICH',
+  legalName: 'FOODUCTIVE SOLUTIONS',
   registeredAddress: 'SHOP NO. WADMUKHWADI8, TAJNE MALA ROAD, PUNE - 411039',
   factoryAddress: 'PUNE, MAHARASHTRA',
   gstin: '27DUDPK8340H1ZH',
