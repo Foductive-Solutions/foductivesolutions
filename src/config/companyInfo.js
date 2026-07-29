@@ -2,7 +2,7 @@
 export const COMPANY_INFO = {
   name: 'AARICH',
   legalName: 'FODUCTIVE SOLUTIONS',
-  registeredAddress: 'SHOP NO. WADMUKHWADI8, TAJNE MALA ROAD, PUNE - 411039',
+  registeredAddress: 'SHOP NO. 13, WADMUKHWADI, TAJNE MALA ROAD, PUNE - 411039',
   factoryAddress: 'PUNE, MAHARASHTRA',
   gstin: '27DUDPK8340H1ZH',
   pan: 'DUDPK8340H',
