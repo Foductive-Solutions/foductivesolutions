@@ -1,119 +1,35 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { COMPANY_INFO } from '../../config/companyInfo'
-
-/* ---------------------------------------------------------------- */
-/*  Minimal hand-drawn icon set (no external icon dependency)        */
-/* ---------------------------------------------------------------- */
-const line = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }
-
-const IconDroplet = (p) => (<svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M12 2.7s7.2 8.2 7.2 13.1A7.2 7.2 0 1 1 4.8 15.8C4.8 10.9 12 2.7 12 2.7Z" /></svg>)
-const IconUsers = (p) => (<svg {...line} {...p}><circle cx="8.5" cy="8" r="3" /><circle cx="16.2" cy="9.2" r="2.3" /><path d="M2.7 19.3c0-3.1 2.6-5.4 5.8-5.4s5.8 2.3 5.8 5.4" /><path d="M14.9 14.2c2.5.3 4.5 2.2 4.5 5" /></svg>)
-const IconChart = (p) => (<svg {...line} {...p}><path d="M4 20V11M10 20V5M16 20v-7M4 20h16" /></svg>)
-const IconClipboard = (p) => (<svg {...line} {...p}><rect x="5" y="4" width="14" height="17" rx="2.2" /><path d="M9 4V3.3A1.3 1.3 0 0 1 10.3 2h3.4A1.3 1.3 0 0 1 15 3.3V4" /><path d="M8.5 11h7M8.5 14.3h7M8.5 17.6h4" /></svg>)
-const IconCube = (p) => (<svg {...line} {...p}><path d="M12 3.2 20 7.6v8.8L12 20.8l-8-4.4V7.6l8-4.4Z" /><path d="M12 3.2v9.2M12 12.4 20 7.6M12 12.4 4 7.6M12 12.4v8.4" /></svg>)
-const IconShield = (p) => (<svg {...line} {...p}><path d="M12 3 19 6v5.4c0 4.6-3 7.9-7 9-4-1.1-7-4.4-7-9V6l7-3Z" /><path d="M9 12.2l2 2 4-4.2" /></svg>)
-const IconTruck = (p) => (<svg {...line} {...p}><rect x="2" y="7" width="11" height="9.5" rx="1.2" /><path d="M13 10.2h3.8L20 13.4v3.1h-7z" /><circle cx="6.6" cy="18" r="1.7" /><circle cx="16.6" cy="18" r="1.7" /></svg>)
-const IconMenu = (p) => (<svg {...line} {...p}><path d="M4 7h16M4 12h16M4 17h16" /></svg>)
-const IconClose = (p) => (<svg {...line} {...p}><path d="M6 6l12 12M18 6L6 18" /></svg>)
-const IconArrow = (p) => (<svg {...line} {...p}><path d="M5 12h14M13 6l6 6-6 6" /></svg>)
-const IconPin = (p) => (<svg {...line} {...p}><path d="M12 21s7-6.1 7-11.4A7 7 0 1 0 5 9.6C5 14.9 12 21 12 21Z" /><circle cx="12" cy="9.5" r="2.3" /></svg>)
-const IconBuilding = (p) => (<svg {...line} {...p}><rect x="4" y="3" width="16" height="18" rx="1.2" /><path d="M8 7h1.4M8 11h1.4M8 15h1.4M14.6 7H16M14.6 11H16M14.6 15H16" /><path d="M10 21v-4h4v4" /></svg>)
-const IconCup = (p) => (<svg {...line} {...p}><path d="M5 9h11v5a5.5 5.5 0 0 1-5.5 5.5A5.5 5.5 0 0 1 5 14V9Z" /><path d="M16 10h1.5a2.3 2.3 0 0 1 0 4.6H16" /><path d="M8 4.5c0 1-1 1-1 2M11.5 4.5c0 1-1 1-1 2" /></svg>)
-const IconUtensils = (p) => (<svg {...line} {...p}><path d="M7 2.5v7a2 2 0 0 0 2 2v10" /><path d="M7 2.5v5M9.6 2.5v5" /><path d="M16.5 2.5c-1.6 0-2.5 2-2.5 4.6 0 2 1 3.4 2 3.9v10.5" /></svg>)
-const IconCalendar = (p) => (<svg {...line} {...p}><rect x="3.5" y="5" width="17" height="15" rx="1.6" /><path d="M3.5 9.5h17M8 3v3.4M16 3v3.4" /></svg>)
-
-/* ---------------------------------------------------------------- */
-/*  Bottle illustration — pure SVG, sized/tinted per pack             */
-/* ---------------------------------------------------------------- */
-const BottleGlyph = ({ uid, sizeLabel, from, to, big = false }) => (
-  <svg viewBox="0 0 140 300" className={big ? 'h-72 w-full drop-shadow-[0_25px_35px_rgba(8,47,73,0.45)]' : 'h-56 w-full drop-shadow-[0_15px_25px_rgba(8,47,73,0.35)]'}>
-    <defs>
-      <linearGradient id={`water-${uid}`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor={from} />
-        <stop offset="100%" stopColor={to} />
-      </linearGradient>
-      <linearGradient id={`shine-${uid}`} x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
-        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-      </linearGradient>
-    </defs>
-    <rect x="52" y="8" width="36" height="18" rx="5" fill="#0f172a" />
-    <rect x="58" y="24" width="24" height="26" fill="#0f172a" opacity="0.85" />
-    <path
-      d="M58 50 L82 50 L118 96 L118 268 A16 16 0 0 1 102 284 L38 284 A16 16 0 0 1 22 268 L22 96 Z"
-      fill={`url(#water-${uid})`}
-      stroke="rgba(8,47,73,0.35)"
-      strokeWidth="2"
-    />
-    <path
-      d="M22 114 Q40 105 58 114 T94 114 T118 114 L118 268 A16 16 0 0 1 102 284 L38 284 A16 16 0 0 1 22 268 Z"
-      fill="rgba(255,255,255,0.14)"
-    />
-    <path d="M34 104 L34 260" stroke={`url(#shine-${uid})`} strokeWidth="9" strokeLinecap="round" />
-    <rect x="24" y="188" width="92" height="46" rx="8" fill="white" fillOpacity="0.96" />
-    <text x="70" y="217" textAnchor="middle" fontSize="21" fontWeight="700" fill="#0f172a" fontFamily="Sora, sans-serif">
-      {sizeLabel}
-    </text>
-  </svg>
-)
-
-/* ---------------------------------------------------------------- */
-/*  Scroll-reveal wrapper                                             */
-/* ---------------------------------------------------------------- */
-const useInView = () => {
-  const ref = useRef(null)
-  const [inView, setInView] = useState(false)
-  useEffect(() => {
-    const node = ref.current
-    if (!node) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.15 }
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
-  return [ref, inView]
-}
-
-const Reveal = ({ children, className = '', delay = 0 }) => {
-  const [ref, inView] = useInView()
-  return (
-    <div
-      ref={ref}
-      className={`transition-all duration-700 ease-out ${inView ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  )
-}
-
-/* ---------------------------------------------------------------- */
-/*  Reusable decorative wave divider                                  */
-/* ---------------------------------------------------------------- */
-const WaveDivider = ({ className = '', flip = false }) => (
-  <svg
-    viewBox="0 0 1440 96"
-    preserveAspectRatio="none"
-    className={`h-16 w-full ${flip ? 'rotate-180' : ''} ${className}`}
-  >
-    <path d="M0,32 C240,80 480,0 720,32 C960,64 1200,16 1440,48 L1440,96 L0,96 Z" fill="currentColor" />
-  </svg>
-)
-
-/* ---------------------------------------------------------------- */
+import {
+  IconArrow,
+  IconBuilding,
+  IconCalendar,
+  IconChart,
+  IconClipboard,
+  IconClose,
+  IconCube,
+  IconCup,
+  IconDroplet,
+  IconMenu,
+  IconPin,
+  IconShield,
+  IconTruck,
+  IconUsers,
+  IconUtensils,
+} from './icons'
+import Reveal from './Reveal'
+import LiquidWave from './LiquidWave'
+import OrderEstimator from './OrderEstimator'
+import Faq from './Faq'
+import { useCountUp, useInView, useMagnetic, useScrollProgress, useTilt } from './hooks'
 
 const NAV_LINKS = [
   { href: '#products', label: 'Products' },
+  { href: '#estimate', label: 'Estimate' },
   { href: '#why-us', label: 'Why Us' },
   { href: '#process', label: 'Process' },
   { href: '#serve', label: 'Who We Serve' },
+  { href: '#faq', label: 'FAQ' },
 ]
 
 const PRODUCTS = [
@@ -122,8 +38,7 @@ const PRODUCTS = [
     size: '1000ml',
     title: 'Large Format',
     tag: 'Bulk Supply',
-    from: '#38bdf8',
-    to: '#2563eb',
+    photo: '/bottle-1000ml.png',
     desc: 'High-capacity bottles built for dispensers, banquet counters and back-of-house stock in busy kitchens.',
     idealFor: ['Restaurants', 'Offices', 'Bulk Orders'],
   },
@@ -132,8 +47,7 @@ const PRODUCTS = [
     size: '500ml',
     title: 'Everyday Pack',
     tag: 'Most Popular',
-    from: '#67e8f9',
-    to: '#0d9488',
+    photo: '/bottle-500ml.png',
     desc: 'The standard for daily service — guest rooms, dining tables and staff hydration, restocked on schedule.',
     idealFor: ['Hotels', 'Cafés', 'Daily Service'],
   },
@@ -142,8 +56,7 @@ const PRODUCTS = [
     size: '200ml',
     title: 'Compact Pack',
     tag: 'Grab & Go',
-    from: '#5eead4',
-    to: '#22d3ee',
+    photo: '/bottle-200ml.png',
     desc: 'Convenient single-serve bottles for meetings, events and quick turnarounds where portions matter.',
     idealFor: ['Events', 'Meetings', 'Catering'],
   },
@@ -173,7 +86,7 @@ const SEGMENTS = [
 ]
 
 const STATS = [
-  { value: '3', label: 'Bottle Sizes — 200ml, 500ml & 1000ml' },
+  { value: 3, isNumber: true, label: 'Bottle Sizes — 200ml, 500ml & 1000ml' },
   { value: 'B2B', label: 'Built for Hotels, Cafés & Restaurants' },
   { value: 'Daily', label: 'Delivery Routes Across the City' },
   { value: 'Every Batch', label: 'Quality Checked Before Dispatch' },
@@ -181,25 +94,69 @@ const STATS = [
 
 const MARQUEE_ITEMS = ['Hotels', 'Cafés', 'Restaurants', 'Offices', 'Event Caterers', 'Guest Houses', 'Canteens']
 
+const CountStat = ({ target, trigger }) => {
+  const value = useCountUp(target, { trigger })
+  return <>{value}</>
+}
+
+const ScrollProgressBar = () => {
+  const progress = useScrollProgress()
+  return (
+    <div className="fixed left-0 top-0 z-[60] h-1 w-full bg-white/5">
+      <div
+        className="h-full bg-linear-to-r from-cyan-400 to-teal-400 transition-[width] duration-150 ease-out"
+        style={{ width: `${progress * 100}%` }}
+      />
+    </div>
+  )
+}
+
+const BackToTop = () => {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > window.innerHeight * 0.6)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  if (!visible) return null
+  return (
+    <button
+      type="button"
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Back to top"
+      className="fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-slate-900/90 text-cyan-300 shadow-xl backdrop-blur transition hover:border-cyan-400/40 hover:text-cyan-200"
+    >
+      <IconArrow className="h-5 w-5 -rotate-90" />
+    </button>
+  )
+}
+
 const Portfolio = () => {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [statsRef, statsInView] = useInView()
+  const tilt = useTilt(6)
+  const magneticPrimary = useMagnetic(10)
+  const magneticCta = useMagnetic(10)
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-950 font-sans text-slate-200">
+      <ScrollProgressBar />
+      <BackToTop />
+
       {/* ---------------------------------- Nav ---------------------------------- */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <a href="#top" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-cyan-400 to-teal-600 shadow-lg shadow-cyan-500/20">
-              <IconDroplet className="h-5 w-5 text-white" />
-            </span>
+            <img src="/aarich_logo_mark.png" alt="AARICH" className="h-10 w-10 object-contain" />
             <span className="flex flex-col leading-none">
               <span className="font-display text-lg font-bold tracking-tight text-white">AARICH</span>
               <span className="text-[10px] uppercase tracking-wider text-slate-400">Foductive Solutions</span>
             </span>
           </a>
 
-          <nav className="hidden items-center gap-8 md:flex">
+          <nav className="hidden items-center gap-5 lg:flex">
             {NAV_LINKS.map((l) => (
               <a key={l.href} href={l.href} className="text-sm font-medium text-slate-300 transition hover:text-cyan-300">
                 {l.label}
@@ -207,7 +164,7 @@ const Portfolio = () => {
             ))}
           </nav>
 
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-3 lg:flex">
             <a
               href="/login"
               className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-cyan-300"
@@ -218,7 +175,7 @@ const Portfolio = () => {
 
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="rounded-lg p-2 text-slate-300 md:hidden"
+            className="rounded-lg p-2 text-slate-300 lg:hidden"
             aria-label="Toggle menu"
           >
             {menuOpen ? <IconClose className="h-6 w-6" /> : <IconMenu className="h-6 w-6" />}
@@ -226,7 +183,7 @@ const Portfolio = () => {
         </div>
 
         {menuOpen && (
-          <div className="border-t border-white/10 bg-slate-950/95 px-4 py-4 md:hidden">
+          <div className="border-t border-white/10 bg-slate-950/95 px-4 py-4 lg:hidden">
             <nav className="flex flex-col gap-3">
               {NAV_LINKS.map((l) => (
                 <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)} className="py-1 text-sm font-medium text-slate-300">
@@ -264,42 +221,46 @@ const Portfolio = () => {
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <a
+                {...magneticPrimary}
                 href="#products"
-                className="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-cyan-500 to-teal-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-cyan-500/40"
+                className="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-cyan-500 to-teal-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/25 transition-shadow hover:shadow-cyan-500/40"
               >
                 View Our Products
                 <IconArrow className="h-4 w-4 transition group-hover:translate-x-1" />
               </a>
               <a
-                href="/login"
+                href="#estimate"
                 className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-6 py-3 font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5"
               >
-                Admin Dashboard
+                Plan Your Order
               </a>
             </div>
 
-            <dl className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <dl ref={statsRef} className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-4">
               {STATS.map((s) => (
                 <div key={s.label}>
-                  <dt className="font-display text-2xl font-bold text-white">{s.value}</dt>
+                  <dt className="font-display text-2xl font-bold tabular-nums text-white">
+                    {s.isNumber ? <CountStat target={s.value} trigger={statsInView} /> : s.value}
+                  </dt>
                   <dd className="mt-1 text-xs leading-snug text-slate-500">{s.label}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
-          <div className="relative">
+          <div
+            {...tilt}
+            className="relative transition-transform duration-200 ease-out [transform-style:preserve-3d]"
+          >
             <div className="absolute inset-0 -z-10 rounded-[2rem] bg-linear-to-br from-cyan-500/10 to-teal-500/5 blur-2xl" />
-            <div className="grid grid-cols-3 items-end gap-4 rounded-[2rem] border border-white/10 bg-white/3 p-8 backdrop-blur-sm">
-              <div className="animate-float-slower">
-                <BottleGlyph uid="hero-sm" sizeLabel="200ml" from="#5eead4" to="#22d3ee" />
-              </div>
-              <div className="animate-float">
-                <BottleGlyph uid="hero-md" sizeLabel="500ml" from="#67e8f9" to="#0d9488" big />
-              </div>
-              <div className="animate-float-slow">
-                <BottleGlyph uid="hero-lg" sizeLabel="1000ml" from="#38bdf8" to="#2563eb" />
-              </div>
+            <div className="overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl shadow-cyan-500/10">
+              <img
+                src="/three-bottles-office.png"
+                alt="AARICH branded water bottles on a table"
+                className="h-[380px] w-full object-cover object-[center_28%] sm:h-[440px] md:h-[520px]"
+                loading="eager"
+                fetchPriority="high"
+              />
             </div>
 
             <div className="absolute -right-4 -top-4 flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/90 px-4 py-2.5 shadow-xl backdrop-blur sm:-right-6 sm:-top-6">
@@ -312,7 +273,7 @@ const Portfolio = () => {
           </div>
         </div>
 
-        <WaveDivider className="text-slate-900" />
+        <LiquidWave className="text-slate-900" />
       </section>
 
       {/* ------------------------------- Trust marquee ------------------------------ */}
@@ -332,6 +293,23 @@ const Portfolio = () => {
         </div>
       </section>
 
+      {/* ------------------------------- Brand visual break --------------------------- */}
+      <section className="relative h-[60vh] min-h-[380px] w-full overflow-hidden">
+        <img
+          src="/two-bottles-underwater.png"
+          alt="AARICH water bottles suspended underwater above a coral reef"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-slate-950/80 via-slate-950/10 to-slate-900/85" />
+        <Reveal className="relative flex h-full flex-col items-center justify-center px-4 text-center">
+          <span className="text-xs font-semibold uppercase tracking-widest text-cyan-300">Purity, Naturally</span>
+          <h2 className="mt-3 max-w-2xl font-display text-3xl font-bold text-white sm:text-4xl">
+            Water so clear, it feels like it came straight from the source.
+          </h2>
+        </Reveal>
+      </section>
+
       {/* ---------------------------------- Products --------------------------------- */}
       <section id="products" className="bg-slate-900 py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -344,19 +322,30 @@ const Portfolio = () => {
           <div className="mt-14 grid gap-8 md:grid-cols-3">
             {PRODUCTS.map((p, i) => (
               <Reveal key={p.id} delay={i * 100}>
-                <div className="group relative h-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/60 p-8 transition hover:-translate-y-1 hover:border-cyan-400/30 hover:shadow-2xl hover:shadow-cyan-500/10">
-                  <span className="absolute right-5 top-5 rounded-full bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-cyan-300">
+                <div className="group relative h-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/60 transition hover:-translate-y-1 hover:border-cyan-400/30 hover:shadow-2xl hover:shadow-cyan-500/10">
+                  <span className="absolute right-5 top-5 z-10 rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-cyan-300 backdrop-blur">
                     {p.tag}
                   </span>
-                  <BottleGlyph uid={p.id} sizeLabel={p.size} from={p.from} to={p.to} />
-                  <h3 className="mt-6 font-display text-xl font-bold text-white">{p.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.desc}</p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {p.idealFor.map((t) => (
-                      <span key={t} className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400">
-                        {t}
-                      </span>
-                    ))}
+                  <div className="relative w-full overflow-hidden bg-slate-900">
+                    <img
+                      src={p.photo}
+                      alt={`AARICH ${p.size} water bottle`}
+                      className="h-auto w-full object-cover transition duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-slate-950/90 to-transparent" />
+                    <span className="absolute bottom-3 left-5 font-display text-lg font-bold text-white">{p.size}</span>
+                  </div>
+                  <div className="p-8">
+                    <h3 className="font-display text-xl font-bold text-white">{p.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.desc}</p>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {p.idealFor.map((t) => (
+                        <span key={t} className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </Reveal>
@@ -364,6 +353,9 @@ const Portfolio = () => {
           </div>
         </div>
       </section>
+
+      {/* ------------------------------- Order estimator ----------------------------- */}
+      <OrderEstimator />
 
       {/* ---------------------------------- Why us ----------------------------------- */}
       <section id="why-us" className="relative bg-slate-950 py-24">
@@ -394,7 +386,7 @@ const Portfolio = () => {
 
       {/* ---------------------------------- Process ----------------------------------- */}
       <section id="process" className="relative overflow-hidden bg-slate-900 py-24">
-        <WaveDivider className="absolute -top-1 left-0 text-slate-950" flip />
+        <LiquidWave className="absolute -top-1 left-0 text-slate-950" flip />
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal className="mx-auto max-w-2xl text-center">
             <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">How It Works</span>
@@ -443,9 +435,19 @@ const Portfolio = () => {
         </div>
       </section>
 
+      {/* ---------------------------------------- FAQ ----------------------------------- */}
+      <Faq />
+
       {/* ---------------------------------- CTA banner --------------------------------- */}
-      <section className="relative overflow-hidden bg-linear-to-br from-cyan-600 via-teal-600 to-slate-900 py-20">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.12)_1px,transparent_0)] bg-size-[24px_24px]" />
+      <section className="relative overflow-hidden py-24">
+        <img
+          src="/hero-office-drink.png"
+          alt="A professional drinking AARICH bottled water in an office"
+          className="absolute inset-0 h-full w-full object-cover object-[60%_25%]"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-linear-to-br from-slate-950/92 via-teal-950/85 to-cyan-950/80" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-size-[24px_24px]" />
         <Reveal className="relative mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">Ready to simplify your bulk water supply?</h2>
           <p className="mx-auto mt-4 max-w-xl text-cyan-50/90">
@@ -453,8 +455,9 @@ const Portfolio = () => {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a
+              {...magneticCta}
               href="#products"
-              className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 font-semibold text-teal-700 shadow-lg transition hover:bg-cyan-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 font-semibold text-teal-700 shadow-lg transition-shadow hover:bg-cyan-50"
             >
               View Our Products
             </a>
@@ -474,9 +477,7 @@ const Portfolio = () => {
           <div className="grid gap-10 md:grid-cols-3">
             <div>
               <a href="#top" className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-cyan-400 to-teal-600">
-                  <IconDroplet className="h-5 w-5 text-white" />
-                </span>
+                <img src="/aarich_logo_mark.png" alt="AARICH" className="h-10 w-10 object-contain" />
                 <span className="font-display text-lg font-bold text-white">AARICH</span>
               </a>
               <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">

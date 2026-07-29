@@ -10,6 +10,8 @@
   --animate-blob: blob-move 16s ease-in-out infinite;
   --animate-blob-slow: blob-move 22s ease-in-out infinite reverse;
   --animate-marquee: marquee 32s linear infinite;
+  --animate-wave-drift: marquee 22s linear infinite;
+  --animate-wave-drift-slow: marquee 36s linear infinite reverse;
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-ripple: ripple 2.4s ease-out infinite;
 }
@@ -51,4 +53,18 @@ body {
 @keyframes ripple {
   0% { transform: scale(0.9); opacity: 0.55; }
   100% { transform: scale(1.9); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-slow,
+  .animate-float-slower,
+  .animate-blob,
+  .animate-blob-slow,
+  .animate-marquee,
+  .animate-wave-drift,
+  .animate-wave-drift-slow,
+  .animate-ripple {
+    animation: none !important;
+  }
 }
