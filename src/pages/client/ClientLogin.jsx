@@ -125,7 +125,7 @@ const ClientLogin = () => {
           </p>
         </form>
 
-        <a href="/portfolio" className="mt-6 block text-center text-sm text-slate-500 hover:text-cyan-300">
+        <a href="/portfolio" className="mt-6 hidden text-center text-sm text-slate-500 hover:text-cyan-300 sm:block">
           ← Back to home
         </a>
       </div>

@@ -1,6 +1,36 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import { addOrder, getOrdersByCustomer } from '../../firebase/services'
+import { sendCustomEmail } from '../../utils/emailService'
+
+const ADMIN_NOTIFY_EMAIL = import.meta.env.VITE_ADMIN_NOTIFICATION_EMAIL
+
+// Best-effort email to the admin's personal inbox when a customer places an order
+// via the portal — never blocks or fails the order itself if it can't send.
+const notifyAdminOfNewOrder = (order, customer) => {
+  if (!ADMIN_NOTIFY_EMAIL) {
+    console.warn('[ClientHome] VITE_ADMIN_NOTIFICATION_EMAIL not set — skipping new-order email')
+    return
+  }
+  const items = []
+  if (order.qty200ml > 0) items.push(`${order.qty200ml} × 200ml`)
+  if (order.qty500ml > 0) items.push(`${order.qty500ml} × 500ml`)
+  if (order.qty1000ml > 0) items.push(`${order.qty1000ml} × 1000ml`)
+
+  const body = [
+    'New order placed via the customer portal.',
+    '',
+    `Shop: ${customer.shopName}`,
+    `Contact: ${customer.billingPerson || '—'} · ${customer.mobile || '—'}`,
+    `Order ID: ${order.orderId}`,
+    `Items: ${items.join(', ') || 'None'}`,
+    `Estimated Total: ${formatMoney(order.totalBill)}`,
+  ].join('\n')
+
+  sendCustomEmail(ADMIN_NOTIFY_EMAIL, 'Admin', `New Order — ${customer.shopName} (${order.orderId})`, body).catch(
+    (err) => console.error('[ClientHome] Failed to send new-order admin notification:', err)
+  )
+}
 
 const icon = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' }
 const IconDroplet = (p) => (<svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M12 2.7s7.2 8.2 7.2 13.1A7.2 7.2 0 1 1 4.8 15.8C4.8 10.9 12 2.7 12 2.7Z" /></svg>)
@@ -67,6 +97,7 @@ const OrderTab = ({ customer, orders, onOrderPlaced }) => {
         status: 'Pending',
       }
       await addOrder(newOrder)
+      notifyAdminOfNewOrder(newOrder, customer)
       setQty({ qty200ml: 0, qty500ml: 0, qty1000ml: 0 })
       setMessage('Order placed! Our team will confirm delivery shortly.')
       onOrderPlaced()

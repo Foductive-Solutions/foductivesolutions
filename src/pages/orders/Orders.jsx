@@ -341,7 +341,17 @@ const Orders = () => {
             ) : (
               filteredOrders.map((order) => (
               <tr key={order.id}>
-                <td className="px-4 py-3 text-teal-400">{order.orderId}</td>
+                <td className="px-4 py-3 text-teal-400">
+                  {order.orderId}
+                  {order.source === 'customer-portal' && (
+                    <span
+                      className="ml-2 rounded-full border border-cyan-700 bg-cyan-950 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-400"
+                      title="Placed by the customer via the customer portal"
+                    >
+                      Self-order
+                    </span>
+                  )}
+                </td>
                 <td className="px-4 py-3">{order.customer}</td>
                 <td className="px-4 py-3 text-right text-yellow-400">
                   ₹ {order.totalBill}
