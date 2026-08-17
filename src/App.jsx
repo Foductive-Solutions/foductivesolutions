@@ -1,11 +1,15 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { CustomerAuthProvider } from './context/CustomerAuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import ClientProtectedRoute from './components/ClientProtectedRoute'
 import AdminLayout from './layout/AdminLayout'
 import Landing from './pages/landing/Landing'
 import Portfolio from './pages/portfolio/Portfolio'
 import Login from './pages/Auth/Login'
+import ClientLogin from './pages/client/ClientLogin'
+import ClientHome from './pages/client/ClientHome'
 import Dashboard from './pages/dashboard/Dashboard'
 import CustomerDetail from './pages/customers/CustomerDetail'
 import Orders from './pages/orders/Orders'
@@ -19,27 +23,35 @@ import Reports from './pages/reports/Reports'
 const App = () => {
   return (
     <AuthProvider>
-      <Routes>
-        {/* Public Routes */}
-        <Route path='/' element={<Landing />} />
-        <Route path='/portfolio' element={<Portfolio />} />
-        <Route path="/login" element={<Login />} />
+      <CustomerAuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path='/' element={<Landing />} />
+          <Route path='/portfolio' element={<Portfolio />} />
+          <Route path="/login" element={<Login />} />
 
-        {/* Protected Admin Routes with Layout */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AdminLayout />}>
-            <Route path='/dashboard' element={<Dashboard />} />
-            <Route path='/customers' element={<Customers />} />
-            <Route path='/customer/:id' element={<CustomerDetail />} />
-            <Route path='/orders' element={<Orders />} />
-            <Route path='/expenses' element={<Expenses />} />
-            <Route path='/purchase' element={<Purchase />} />
-            <Route path='/vehicle-stock' element={<VehicleStock />} />
-            <Route path='/feedback' element={<Feedback />} />
-            <Route path='/reports' element={<Reports />} />
+          {/* Customer Portal */}
+          <Route path='/client/login' element={<ClientLogin />} />
+          <Route element={<ClientProtectedRoute />}>
+            <Route path='/client' element={<ClientHome />} />
           </Route>
-        </Route>
-      </Routes>
+
+          {/* Protected Admin Routes with Layout */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route path='/dashboard' element={<Dashboard />} />
+              <Route path='/customers' element={<Customers />} />
+              <Route path='/customer/:id' element={<CustomerDetail />} />
+              <Route path='/orders' element={<Orders />} />
+              <Route path='/expenses' element={<Expenses />} />
+              <Route path='/purchase' element={<Purchase />} />
+              <Route path='/vehicle-stock' element={<VehicleStock />} />
+              <Route path='/feedback' element={<Feedback />} />
+              <Route path='/reports' element={<Reports />} />
+            </Route>
+          </Route>
+        </Routes>
+      </CustomerAuthProvider>
     </AuthProvider>
   )
 }

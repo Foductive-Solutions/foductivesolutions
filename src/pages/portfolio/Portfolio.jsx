@@ -166,6 +166,12 @@ const Portfolio = () => {
 
           <div className="hidden items-center gap-3 lg:flex">
             <a
+              href="/client/login"
+              className="rounded-lg bg-linear-to-r from-cyan-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:shadow-cyan-500/40"
+            >
+              Customer Login
+            </a>
+            <a
               href="/login"
               className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-cyan-300"
             >
@@ -190,7 +196,10 @@ const Portfolio = () => {
                   {l.label}
                 </a>
               ))}
-              <a href="/login" className="mt-1 rounded-lg bg-teal-600 px-4 py-2 text-center text-sm font-semibold text-white">
+              <a href="/client/login" className="mt-1 rounded-lg bg-linear-to-r from-cyan-500 to-teal-600 px-4 py-2 text-center text-sm font-semibold text-white">
+                Customer Login
+              </a>
+              <a href="/login" className="rounded-lg border border-white/10 px-4 py-2 text-center text-sm font-semibold text-slate-200">
                 Admin Dashboard
               </a>
             </nav>
@@ -494,6 +503,9 @@ const Portfolio = () => {
                     {l.label}
                   </a>
                 ))}
+                <a href="/client/login" className="text-slate-400 transition hover:text-cyan-300">
+                  Customer Login
+                </a>
                 <a href="/login" className="text-slate-400 transition hover:text-cyan-300">
                   Admin Dashboard
                 </a>

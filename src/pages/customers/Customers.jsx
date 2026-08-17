@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Modal from '../../components/Modal'
 import AddCustomerForm from '../../components/forms/AddCustomerForm'
 import SendMailModal from '../../components/SendMailModal'
+import CustomerCredentialsModal from '../../components/CustomerCredentialsModal'
 import { getCustomers, addCustomer, updateCustomer, deleteCustomer } from '../../firebase/services'
 
 const Customers = () => {
@@ -13,6 +14,7 @@ const Customers = () => {
   const [editingCustomer, setEditingCustomer] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [mailCustomer, setMailCustomer] = useState(null)
+  const [credentialsCustomer, setCredentialsCustomer] = useState(null)
 
   // Fetch customers from Firebase on mount
   useEffect(() => {
@@ -197,6 +199,13 @@ const Customers = () => {
                     📧 Mail
                   </button>
                   <button
+                    onClick={() => setCredentialsCustomer(customer)}
+                    className={customer.loginUsername ? 'text-emerald-400' : 'text-slate-400'}
+                    title="Customer portal login access"
+                  >
+                    🔑 Login
+                  </button>
+                  <button
                     onClick={() => setDeleteConfirm(customer.id)}
                     className="text-red-400"
                   >
@@ -271,6 +280,16 @@ const Customers = () => {
         onClose={() => setMailCustomer(null)}
         customer={mailCustomer}
         mode="both"
+      />
+
+      {/* Customer Portal Credentials Modal */}
+      <CustomerCredentialsModal
+        customer={credentialsCustomer}
+        onClose={() => setCredentialsCustomer(null)}
+        onSaved={async () => {
+          await fetchCustomers()
+          setCredentialsCustomer(null)
+        }}
       />
     </div>
   )

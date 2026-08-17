@@ -84,6 +84,52 @@ export const deleteCustomer = async (customerId) => {
   }
 };
 
+// ==================== CUSTOMER PORTAL LOGIN ====================
+// Admin-managed credentials that let a customer sign in to the customer portal.
+// Only admin can set/change these (see CustomerCredentialsModal) — the portal itself
+// never writes to loginUsername/loginPasswordHash.
+
+export const setCustomerCredentials = async (customerId, { username, passwordHash }) => {
+  try {
+    const docRef = doc(db, 'customers', customerId);
+    await updateDoc(docRef, {
+      loginUsername: username,
+      loginPasswordHash: passwordHash,
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error setting customer credentials:', error);
+    throw error;
+  }
+};
+
+export const revokeCustomerCredentials = async (customerId) => {
+  try {
+    const docRef = doc(db, 'customers', customerId);
+    await updateDoc(docRef, {
+      loginUsername: '',
+      loginPasswordHash: '',
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error revoking customer credentials:', error);
+    throw error;
+  }
+};
+
+export const findCustomerByUsername = async (username) => {
+  try {
+    const q = query(collection(db, 'customers'), where('loginUsername', '==', username), limit(1));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return null;
+    const docSnap = snapshot.docs[0];
+    return { id: docSnap.id, ...docSnap.data() };
+  } catch (error) {
+    console.error('Error finding customer by username:', error);
+    throw error;
+  }
+};
+
 // ==================== ORDERS ====================
 
 export const addOrder = async (orderData) => {
