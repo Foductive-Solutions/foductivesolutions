@@ -57,26 +57,30 @@ const OrderReceipt = ({ order, customer, onClose }) => {
 
   const orderId = order.orderId || order.id || 'RECEIPT'
 
-  // Helper to capture the receipt element as a high-resolution canvas
+  // Helper to capture the receipt element as a high-resolution canvas without tainting
   const captureReceiptCanvas = async () => {
     if (!receiptRef.current) return null
     return await html2canvas(receiptRef.current, {
-      scale: 3, // High-res 300dpi equivalent
+      scale: 2.5,
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       backgroundColor: '#ffffff',
       logging: false,
     })
   }
 
-  // Trigger file download in browser / mobile WebView
-  const triggerBrowserDownload = (dataUrl, fileName) => {
+  // Helper for safe mobile & desktop file downloads via Blob
+  const triggerBlobDownload = (blob, fileName) => {
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.href = dataUrl
+    link.href = url
     link.download = fileName
     document.body.appendChild(link)
     link.click()
-    document.body.removeChild(link)
+    setTimeout(() => {
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    }, 1500)
   }
 
   // Notify React Native / Expo WebView if running inside an app container
@@ -115,19 +119,24 @@ const OrderReceipt = ({ order, customer, onClose }) => {
       pdf.save(pdfFileName)
 
       // Also post to React Native WebView for native handling
-      postToReactNativeWebView({
-        type: 'DOWNLOAD_RECEIPT',
-        format: 'pdf',
-        fileName: pdfFileName,
-        orderId,
-        dataUrl: pdf.output('datauristring'),
-      })
+      try {
+        postToReactNativeWebView({
+          type: 'DOWNLOAD_RECEIPT',
+          format: 'pdf',
+          fileName: pdfFileName,
+          orderId,
+          dataUrl: pdf.output('datauristring'),
+        })
+      } catch (e) {
+        console.warn('WebView event note:', e)
+      }
 
       setFeedback('PDF downloaded successfully!')
-      setTimeout(() => setFeedback(''), 3500)
+      setTimeout(() => setFeedback(''), 3000)
     } catch (err) {
       console.error('Failed to download PDF receipt:', err)
       setFeedback('Failed to generate PDF. Using print view…')
+      setTimeout(() => setFeedback(''), 3000)
       window.print()
     } finally {
       setDownloading(false)
@@ -142,23 +151,45 @@ const OrderReceipt = ({ order, customer, onClose }) => {
       const canvas = await captureReceiptCanvas()
       if (!canvas) throw new Error('Could not render receipt')
 
-      const imgData = canvas.toDataURL('image/png')
       const fileName = `Receipt_${orderId}.png`
-      triggerBrowserDownload(imgData, fileName)
 
-      postToReactNativeWebView({
-        type: 'DOWNLOAD_RECEIPT',
-        format: 'image',
-        fileName,
-        orderId,
-        dataUrl: imgData,
-      })
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          try {
+            const imgData = canvas.toDataURL('image/png')
+            const link = document.createElement('a')
+            link.href = imgData
+            link.download = fileName
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+          } catch (e) {
+            console.error('DataURL download fallback failed:', e)
+          }
+        } else {
+          triggerBlobDownload(blob, fileName)
+        }
 
-      setFeedback('Receipt image saved!')
-      setTimeout(() => setFeedback(''), 3500)
+        try {
+          const imgData = canvas.toDataURL('image/png')
+          postToReactNativeWebView({
+            type: 'DOWNLOAD_RECEIPT',
+            format: 'image',
+            fileName,
+            orderId,
+            dataUrl: imgData,
+          })
+        } catch (e) {
+          console.warn('WebView event note:', e)
+        }
+
+        setFeedback('Receipt image saved!')
+        setTimeout(() => setFeedback(''), 3000)
+      }, 'image/png')
     } catch (err) {
       console.error('Failed to download receipt image:', err)
       setFeedback('Could not save image.')
+      setTimeout(() => setFeedback(''), 3000)
     } finally {
       setDownloading(false)
     }
@@ -207,7 +238,7 @@ const OrderReceipt = ({ order, customer, onClose }) => {
           // Fallback to image download
           handleDownloadImage()
         }
-        setTimeout(() => setFeedback(''), 3500)
+        setTimeout(() => setFeedback(''), 3000)
       }, 'image/png')
     } catch (err) {
       console.error('Share failed:', err)
@@ -293,7 +324,6 @@ const OrderReceipt = ({ order, customer, onClose }) => {
                   src="/aarich_logo_mark.png"
                   alt="AARICH"
                   className="h-11 w-11 object-contain"
-                  crossOrigin="anonymous"
                 />
                 <div>
                   <h2 className="text-lg font-black tracking-tight text-slate-900">{COMPANY_INFO.name}</h2>
@@ -457,4 +487,3 @@ const OrderReceipt = ({ order, customer, onClose }) => {
 }
 
 export default OrderReceipt
-
