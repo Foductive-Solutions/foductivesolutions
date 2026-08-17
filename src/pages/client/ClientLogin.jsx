@@ -54,27 +54,33 @@ const ClientLogin = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 py-10">
-      <div className="w-full max-w-sm">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 py-12 overflow-hidden">
+      {/* Subtle Ambient Background Gradients */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px]" />
+      <div className="pointer-events-none absolute -bottom-40 right-1/4 h-96 w-96 rounded-full bg-teal-500/10 blur-[120px]" />
+
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
-          <img src="/aarich_logo_mark.png" alt="AARICH" className="h-16 w-16 object-contain" />
-          <h1 className="mt-3 text-2xl font-bold text-white">AARICH</h1>
-          <p className="mt-1 text-sm text-slate-400">Customer portal — order water, view your history.</p>
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-900/90 border border-white/10 p-2 shadow-2xl">
+            <img src="/aarich_logo_mark.png" alt="AARICH" className="h-14 w-14 object-contain" />
+          </div>
+          <h1 className="mt-4 text-2xl sm:text-3xl font-extrabold tracking-tight text-white">AARICH</h1>
+          <p className="mt-1.5 text-sm text-slate-400">Customer Portal — Order water supply & download receipts</p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl"
+          className="space-y-4 rounded-3xl border border-white/10 bg-slate-900/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl"
         >
           {error && (
-            <div className="rounded-lg border border-red-800 bg-red-950 px-3 py-2.5 text-sm text-red-300">
+            <div className="rounded-xl border border-red-800/80 bg-red-950/70 px-4 py-3 text-sm text-red-300">
               {error}
             </div>
           )}
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400">
-              Username
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+              Username / Phone
             </label>
             <input
               type="text"
@@ -82,13 +88,13 @@ const ClientLogin = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={loading}
-              placeholder="Your username"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-base text-white placeholder-slate-500 outline-none transition focus:border-cyan-500"
+              placeholder="Enter your customer username"
+              className="w-full rounded-xl border border-slate-700/80 bg-slate-800/90 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
               Password
             </label>
             <div className="relative">
@@ -98,14 +104,14 @@ const ClientLogin = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
-                placeholder="Your password"
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 pr-11 text-base text-white placeholder-slate-500 outline-none transition focus:border-cyan-500"
+                placeholder="Enter password"
+                className="w-full rounded-xl border border-slate-700/80 bg-slate-800/90 px-4 py-3 pr-11 text-sm text-white placeholder-slate-500 outline-none transition focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 transition hover:text-slate-300"
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-400 transition hover:text-white"
               >
                 {showPassword ? <IconEyeOff className="h-5 w-5" /> : <IconEye className="h-5 w-5" />}
               </button>
@@ -115,18 +121,18 @@ const ClientLogin = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-teal-600 py-3 text-base font-semibold text-white shadow-lg shadow-cyan-500/20 transition disabled:opacity-60"
+            className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:from-cyan-400 hover:to-teal-500 active:scale-[0.99] disabled:opacity-60"
           >
-            {loading ? 'Signing in…' : 'Sign In'}
+            {loading ? 'Signing in…' : 'Sign In to Portal'}
           </button>
 
-          <p className="text-center text-xs text-slate-500">
-            Don&apos;t have login details? Ask us for access.
+          <p className="text-center text-xs text-slate-500 pt-1">
+            Need customer portal login credentials? Contact AARICH administration.
           </p>
         </form>
 
-        <a href="/portfolio" className="mt-6 hidden text-center text-sm text-slate-500 hover:text-cyan-300 sm:block">
-          ← Back to home
+        <a href="/portfolio" className="mt-6 block text-center text-xs font-semibold text-slate-500 hover:text-cyan-400 transition">
+          ← Back to Main Website
         </a>
       </div>
     </div>
