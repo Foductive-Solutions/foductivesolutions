@@ -173,6 +173,21 @@ const Customers = () => {
               <tr key={customer.id} className="hover:bg-slate-800">
                 <td className="px-4 py-3 text-teal-400 font-medium">
                   {customer.shopName}
+                  {customer.loginUsername ? (
+                    <span
+                      className="ml-2 rounded-full border border-emerald-700 bg-emerald-950 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400"
+                      title={`Portal access active — username: ${customer.loginUsername}`}
+                    >
+                      Portal
+                    </span>
+                  ) : (
+                    <span
+                      className="ml-2 rounded-full border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500"
+                      title="No customer portal access set up yet"
+                    >
+                      No Portal
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-3">{customer.billingPerson}</td>
                 <td className="px-4 py-3">{customer.mobile}</td>

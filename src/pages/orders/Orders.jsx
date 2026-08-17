@@ -144,7 +144,31 @@ const Orders = () => {
 
   const handleEditOrder = async (updatedData) => {
     try {
-      await updateOrder(editingOrder.id, updatedData)
+      const q1 = parseInt(updatedData.qty1000ml, 10) || 0
+      const q2 = parseInt(updatedData.qty500ml, 10) || 0
+      const q3 = parseInt(updatedData.qty200ml, 10) || 0
+      const r1 = parseInt(updatedData.rate1000ml, 10) || 0
+      const r2 = parseInt(updatedData.rate500ml, 10) || 0
+      const r3 = parseInt(updatedData.rate200ml, 10) || 0
+
+      const totalBill = q1 * r1 + q2 * r2 + q3 * r3
+      const paid = parseInt(updatedData.paid, 10) || 0
+
+      await updateOrder(editingOrder.id, {
+        customer: updatedData.customer,
+        orderSource: updatedData.orderSource || editingOrder.orderSource || 'vehicle',
+        qty1000ml: q1,
+        qty500ml: q2,
+        qty200ml: q3,
+        rate1000ml: r1,
+        rate500ml: r2,
+        rate200ml: r3,
+        totalBill,
+        paid,
+        remaining: Math.max(0, totalBill - paid),
+        paymentMode: updatedData.paymentMode,
+        status: paid >= totalBill ? 'Completed' : 'Pending'
+      })
       await fetchOrders()
       setEditingOrder(null)
       setIsModalOpen(false)
