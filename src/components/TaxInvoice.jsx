@@ -259,7 +259,10 @@ const TaxInvoice = ({ order, customer, onClose }) => {
               {lineItems.map((item, idx) => (
                 <tr key={idx}>
                   <td className="border border-black px-1 py-1.5 text-center">{idx + 1}</td>
-                  <td className="border border-black px-2 py-1.5">{item.description}</td>
+                  <td className="border border-black px-2 py-1.5">
+                    {item.description}
+                    <span className="block text-[8px] text-gray-500 font-mono">HSN: {item.hsn || '22011010'}</span>
+                  </td>
                   <td className="border border-black px-1 py-1.5 text-center">{item.quantity} {item.unit}</td>
                   <td className="border border-black px-1 py-1.5 text-right">{formatCurrency(item.inclusiveRate)}</td>
                   <td className="border border-black px-1 py-1.5 text-right">{formatCurrency(item.netAmount)}</td>

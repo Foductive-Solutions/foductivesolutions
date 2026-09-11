@@ -326,13 +326,15 @@ const Orders = () => {
       if (c.shopName) customerMap.set(c.shopName, c)
     })
 
-    // Exact headers matching requirement with GST breakdown:
-    // Order Date	Customer Name	Address	Mob	1000 Ml Qty	1000 Ml Rate	500 Ml Qty	500 Ml Rate	200 Ml Qty	200 Ml Rate
+    // Headers matching requirement: Serial Number, Order ID, Order Date, Customer Name, Address, Mob, HSN (22011010), Quantities, Rates, and GST details
     const headers = [
+      'Sr No',
+      'Order ID',
       'Order Date',
       'Customer Name',
       'Address',
       'Mob',
+      'HSN',
       '1000 Ml Qty',
       '1000 Ml Rate',
       '500 Ml Qty',
@@ -346,7 +348,7 @@ const Orders = () => {
       'Status'
     ]
 
-    const rows = exportOrders.map(order => {
+    const rows = exportOrders.map((order, index) => {
       const cust = customerMap.get(order.customerId) || customerMap.get(order.customer)
       const address = order.address || cust?.location || cust?.address || ''
       const mobile = order.mobile || cust?.mobile || ''
@@ -361,10 +363,13 @@ const Orders = () => {
       const sgst = Number((totalTax - cgst).toFixed(2))
 
       return [
+        index + 1,
+        order.orderId || order.id || '',
         formatExportDate(order.date),
         order.customer || '',
         address,
         mobile,
+        '22011010',
         order.qty1000ml || 0,
         order.rate1000ml || 0,
         order.qty500ml || 0,

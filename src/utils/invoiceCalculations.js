@@ -2,10 +2,12 @@ const CGST_RATE = 0.025
 const SGST_RATE = 0.025
 const GST_MULTIPLIER = 1 + CGST_RATE + SGST_RATE
 
+export const HSN_CODE = '22011010'
+
 const PRODUCT_LINES = [
-  { qtyKey: 'qty1000ml', rateKey: 'rate1000ml', description: '1000 ML WATER BOTTLE BOX' },
-  { qtyKey: 'qty500ml', rateKey: 'rate500ml', description: '500 ML WATER BOTTLE BOX' },
-  { qtyKey: 'qty200ml', rateKey: 'rate200ml', description: '200 ML WATER BOTTLE BOX' },
+  { qtyKey: 'qty1000ml', rateKey: 'rate1000ml', description: '1000 ML WATER BOTTLE BOX', hsn: HSN_CODE },
+  { qtyKey: 'qty500ml', rateKey: 'rate500ml', description: '500 ML WATER BOTTLE BOX', hsn: HSN_CODE },
+  { qtyKey: 'qty200ml', rateKey: 'rate200ml', description: '200 ML WATER BOTTLE BOX', hsn: HSN_CODE },
 ]
 
 export const CGST_PERCENT = CGST_RATE * 100
@@ -16,11 +18,12 @@ const round2 = (value) => Math.round(value * 100) / 100
 export function buildTaxInvoiceLineItems(order) {
   const items = []
 
-  PRODUCT_LINES.forEach(({ qtyKey, rateKey, description }) => {
+  PRODUCT_LINES.forEach(({ qtyKey, rateKey, description, hsn }) => {
     const qty = parseInt(order[qtyKey], 10) || 0
     const inclusiveRate = parseFloat(order[rateKey]) || 0
     if (qty <= 0) return
 
+    const grossAmount = qty * inclusiveRate
     const netAmount = round2(grossAmount / GST_MULTIPLIER)
     const exclusiveRate = round2(inclusiveRate / GST_MULTIPLIER)
     const cgstAmount = round2(netAmount * CGST_RATE)
@@ -28,6 +31,7 @@ export function buildTaxInvoiceLineItems(order) {
 
     items.push({
       description,
+      hsn: hsn || HSN_CODE,
       cgstPercent: CGST_PERCENT,
       sgstPercent: SGST_PERCENT,
       quantity: qty,

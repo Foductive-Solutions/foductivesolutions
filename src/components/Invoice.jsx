@@ -147,6 +147,7 @@ const Invoice = ({ order, customer, onClose }) => {
             <thead>
               <tr className="bg-gray-100 text-gray-800 border-b border-gray-300">
                 <th className="py-2.5 px-2 text-left font-bold border border-gray-300">Item Description</th>
+                <th className="py-2.5 px-2 text-center font-bold border border-gray-300 w-20">HSN/SAC</th>
                 <th className="py-2.5 px-2 text-center font-bold border border-gray-300 w-16">Qty (Boxes)</th>
                 <th className="py-2.5 px-2 text-right font-bold border border-gray-300 w-20">Rate (₹)</th>
                 <th className="py-2.5 px-2 text-right font-bold border border-gray-300 w-24">Taxable Value (₹)</th>
@@ -160,6 +161,9 @@ const Invoice = ({ order, customer, onClose }) => {
                 <tr key={idx} className="border-b border-gray-200">
                   <td className="py-2 px-2 border border-gray-300 text-gray-900 font-medium">
                     {item.description}
+                  </td>
+                  <td className="py-2 px-2 border border-gray-300 text-center text-gray-600 font-mono">
+                    {item.hsn || '22011010'}
                   </td>
                   <td className="py-2 px-2 border border-gray-300 text-center font-semibold">{item.quantity}</td>
                   <td className="py-2 px-2 border border-gray-300 text-right">{formatCurrency(item.inclusiveRate)}</td>

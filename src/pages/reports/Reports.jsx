@@ -290,8 +290,8 @@ const Reports = () => {
       return dateStr
     }
 
-    let csv = `Sales Report (${dateRange.startDate} to ${dateRange.endDate})\n\nSummary\nTotal Orders,${summary.totalOrders}\nTotal Revenue (Rs),${summary.totalRevenue}\nTotal Paid (Rs),${summary.totalPaid}\nTotal Pending (Rs),${summary.totalPending}\n\nOrders\nOrder Date,Customer Name,Address,Mob,1000 Ml Qty,1000 Ml Rate,500 Ml Qty,500 Ml Rate,200 Ml Qty,200 Ml Rate,Taxable Value (Rs),CGST 2.5% (Rs),SGST 2.5% (Rs),Total Bill,Paid,Remaining,Status\n`
-    orders.forEach(o => {
+    let csv = `Sales Report (${dateRange.startDate} to ${dateRange.endDate})\n\nSummary\nTotal Orders,${summary.totalOrders}\nTotal Revenue (Rs),${summary.totalRevenue}\nTotal Paid (Rs),${summary.totalPaid}\nTotal Pending (Rs),${summary.totalPending}\n\nOrders\nSr No,Order ID,Order Date,Customer Name,Address,Mob,HSN,1000 Ml Qty,1000 Ml Rate,500 Ml Qty,500 Ml Rate,200 Ml Qty,200 Ml Rate,Taxable Value (Rs),CGST 2.5% (Rs),SGST 2.5% (Rs),Total Bill,Paid,Remaining,Status\n`
+    orders.forEach((o, index) => {
       const cust = customerMap.get(o.customerId) || customerMap.get(o.customer)
       const address = o.address || cust?.location || cust?.address || ''
       const mobile = o.mobile || cust?.mobile || ''
@@ -300,7 +300,7 @@ const Reports = () => {
       const totalTax = Number((totalBill - taxable).toFixed(2))
       const cgst = Number((totalTax / 2).toFixed(2))
       const sgst = Number((totalTax - cgst).toFixed(2))
-      csv += `"${formatExportDate(o.date)}","${o.customer || ''}","${address}","${mobile}",${o.qty1000ml || 0},${o.rate1000ml || 0},${o.qty500ml || 0},${o.rate500ml || 0},${o.qty200ml || 0},${o.rate200ml || 0},${taxable},${cgst},${sgst},${totalBill},${o.paid || 0},${o.remaining || 0},"${o.status || 'Completed'}"\n`
+      csv += `${index + 1},"${o.orderId || o.id || ''}","${formatExportDate(o.date)}","${o.customer || ''}","${address}","${mobile}","22011010",${o.qty1000ml || 0},${o.rate1000ml || 0},${o.qty500ml || 0},${o.rate500ml || 0},${o.qty200ml || 0},${o.rate200ml || 0},${taxable},${cgst},${sgst},${totalBill},${o.paid || 0},${o.remaining || 0},"${o.status || 'Completed'}"\n`
     })
     return csv
   }
