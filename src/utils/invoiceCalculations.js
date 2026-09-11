@@ -21,9 +21,10 @@ export function buildTaxInvoiceLineItems(order) {
     const inclusiveRate = parseFloat(order[rateKey]) || 0
     if (qty <= 0) return
 
-    const grossAmount = qty * inclusiveRate
-    const netAmount = grossAmount / GST_MULTIPLIER
-    const exclusiveRate = inclusiveRate / GST_MULTIPLIER
+    const netAmount = round2(grossAmount / GST_MULTIPLIER)
+    const exclusiveRate = round2(inclusiveRate / GST_MULTIPLIER)
+    const cgstAmount = round2(netAmount * CGST_RATE)
+    const sgstAmount = round2(netAmount * SGST_RATE)
 
     items.push({
       description,
@@ -32,8 +33,10 @@ export function buildTaxInvoiceLineItems(order) {
       quantity: qty,
       unit: 'Box',
       inclusiveRate,
-      exclusiveRate: round2(exclusiveRate),
-      netAmount: round2(netAmount),
+      exclusiveRate,
+      netAmount,
+      cgstAmount,
+      sgstAmount,
       grossAmount: round2(grossAmount),
     })
   })

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Modal from '../../components/Modal'
 import AddOrderForm from '../../components/forms/AddOrderForm'
 import Invoice from '../../components/Invoice'
@@ -21,6 +21,7 @@ const Orders = () => {
     startDate: '',
     endDate: ''
   })
+  const [selectedMonth, setSelectedMonth] = useState('')
   
   // Invoice state
   const [invoiceOrder, setInvoiceOrder] = useState(null)
@@ -229,6 +230,169 @@ const Orders = () => {
 
   const clearDateFilter = () => {
     setDateFilter({ startDate: '', endDate: '' })
+    setSelectedMonth('')
+  }
+
+  // Extract all available months from orders for month-wise selection & export
+  const availableMonths = useMemo(() => {
+    const monthMap = new Map()
+    orders.forEach((o) => {
+      let dateStr = o.date
+      if (dateStr) {
+        const parts = dateStr.split('-')
+        if (parts.length === 3 && parts[0].length === 4) {
+          const yyyy = parts[0]
+          const mm = parts[1]
+          const key = `${yyyy}-${mm}`
+          if (!monthMap.has(key)) {
+            const dateObj = new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, 1)
+            const label = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+            monthMap.set(key, { value: key, label })
+          }
+        } else {
+          const d = new Date(dateStr)
+          if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear()
+            const mm = String(d.getMonth() + 1).padStart(2, '0')
+            const key = `${yyyy}-${mm}`
+            if (!monthMap.has(key)) {
+              const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+              monthMap.set(key, { value: key, label })
+            }
+          }
+        }
+      }
+    })
+    return Array.from(monthMap.values()).sort((a, b) => b.value.localeCompare(a.value))
+  }, [orders])
+
+  const handleMonthSelect = (monthVal) => {
+    setSelectedMonth(monthVal)
+    if (!monthVal) {
+      setDateFilter({ startDate: '', endDate: '' })
+      return
+    }
+    const [yyyy, mm] = monthVal.split('-').map(Number)
+    const startDate = `${yyyy}-${String(mm).padStart(2, '0')}-01`
+    const lastDay = new Date(yyyy, mm, 0).getDate()
+    const endDate = `${yyyy}-${String(mm).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    setDateFilter({ startDate, endDate })
+  }
+
+  const downloadExcel = (targetMonth = null) => {
+    const monthToExport = targetMonth !== null ? targetMonth : selectedMonth
+    let exportOrders = filteredOrders
+    let filenameLabel = 'Filtered'
+
+    if (monthToExport) {
+      const monthObj = availableMonths.find(m => m.value === monthToExport)
+      filenameLabel = monthObj ? monthObj.label.replace(/\s+/g, '_') : monthToExport
+      exportOrders = orders.filter(o => {
+        let dStr = o.date
+        if (dStr) return dStr.startsWith(monthToExport)
+        return false
+      })
+    } else if (!dateFilter.startDate && !dateFilter.endDate && filter === 'all') {
+      filenameLabel = 'All_Orders'
+      exportOrders = orders
+    } else if (dateFilter.startDate || dateFilter.endDate) {
+      filenameLabel = `${dateFilter.startDate || 'start'}_to_${dateFilter.endDate || 'end'}`
+    }
+
+    if (exportOrders.length === 0) {
+      alert('No orders found for the selected period.')
+      return
+    }
+
+    const formatExportDate = (dateStr) => {
+      if (!dateStr) return ''
+      const parts = dateStr.split('-')
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`
+      }
+      const d = new Date(dateStr)
+      if (!isNaN(d.getTime())) {
+        const day = String(d.getDate()).padStart(2, '0')
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const year = d.getFullYear()
+        return `${day}-${month}-${year}`
+      }
+      return dateStr
+    }
+
+    const customerMap = new Map()
+    customers.forEach(c => {
+      if (c.id) customerMap.set(c.id, c)
+      if (c.shopName) customerMap.set(c.shopName, c)
+    })
+
+    // Exact headers matching requirement with GST breakdown:
+    // Order Date	Customer Name	Address	Mob	1000 Ml Qty	1000 Ml Rate	500 Ml Qty	500 Ml Rate	200 Ml Qty	200 Ml Rate
+    const headers = [
+      'Order Date',
+      'Customer Name',
+      'Address',
+      'Mob',
+      '1000 Ml Qty',
+      '1000 Ml Rate',
+      '500 Ml Qty',
+      '500 Ml Rate',
+      '200 Ml Qty',
+      '200 Ml Rate',
+      'Taxable Value (Rs)',
+      'CGST 2.5% (Rs)',
+      'SGST 2.5% (Rs)',
+      'Total Bill (Rs)',
+      'Status'
+    ]
+
+    const rows = exportOrders.map(order => {
+      const cust = customerMap.get(order.customerId) || customerMap.get(order.customer)
+      const address = order.address || cust?.location || cust?.address || ''
+      const mobile = order.mobile || cust?.mobile || ''
+      const totalBill = order.totalBill || (
+        (order.qty1000ml || 0) * (order.rate1000ml || 0) +
+        (order.qty500ml || 0) * (order.rate500ml || 0) +
+        (order.qty200ml || 0) * (order.rate200ml || 0)
+      )
+      const taxable = Number((totalBill / 1.05).toFixed(2))
+      const totalTax = Number((totalBill - taxable).toFixed(2))
+      const cgst = Number((totalTax / 2).toFixed(2))
+      const sgst = Number((totalTax - cgst).toFixed(2))
+
+      return [
+        formatExportDate(order.date),
+        order.customer || '',
+        address,
+        mobile,
+        order.qty1000ml || 0,
+        order.rate1000ml || 0,
+        order.qty500ml || 0,
+        order.rate500ml || 0,
+        order.qty200ml || 0,
+        order.rate200ml || 0,
+        taxable,
+        cgst,
+        sgst,
+        totalBill,
+        order.status || 'Completed'
+      ]
+    })
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(','))
+    ].join('\r\n')
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `Orders_${filenameLabel}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -242,19 +406,31 @@ const Orders = () => {
   return (
     <div className="space-y-6 text-slate-200">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-white">Orders</h1>
           <p className="text-sm text-slate-400">
-            View and manage all customer orders
+            View, filter, and export customer orders
           </p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition"
-        >
-          + New Order
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => downloadExcel()}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm flex items-center gap-2 shadow"
+            title="Download orders in Excel (.csv) format"
+          >
+            <span>📥</span>
+            <span>
+              Download Excel {selectedMonth ? `(${availableMonths.find(m => m.value === selectedMonth)?.label || selectedMonth})` : ''}
+            </span>
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+          >
+            + New Order
+          </button>
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -277,12 +453,32 @@ const Orders = () => {
       {/* Date Filter */}
       <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
         <div className="flex flex-wrap items-center gap-4">
+          {/* Month Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 text-sm">🗓️ Month:</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => handleMonthSelect(e.target.value)}
+              className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm focus:outline-none focus:border-teal-500"
+            >
+              <option value="">All Months</option>
+              {availableMonths.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex items-center gap-2">
             <span className="text-slate-400 text-sm">📅 From:</span>
             <input
               type="date"
               value={dateFilter.startDate}
-              onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+              onChange={(e) => {
+                setSelectedMonth('')
+                setDateFilter(prev => ({ ...prev, startDate: e.target.value }))
+              }}
               className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm focus:outline-none focus:border-teal-500"
             />
           </div>
@@ -291,15 +487,21 @@ const Orders = () => {
             <input
               type="date"
               value={dateFilter.endDate}
-              onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+              onChange={(e) => {
+                setSelectedMonth('')
+                setDateFilter(prev => ({ ...prev, endDate: e.target.value }))
+              }}
               className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm focus:outline-none focus:border-teal-500"
             />
           </div>
           
           {/* Quick Filters */}
-          <div className="flex gap-2 ml-auto">
+          <div className="flex flex-wrap gap-2 ml-auto items-center">
             <button
-              onClick={setTodayFilter}
+              onClick={() => {
+                setSelectedMonth('')
+                setTodayFilter()
+              }}
               className={`px-3 py-1.5 text-xs rounded ${
                 dateFilter.startDate === new Date().toISOString().split('T')[0] && dateFilter.endDate === new Date().toISOString().split('T')[0]
                   ? 'bg-teal-600 text-white'
@@ -309,18 +511,24 @@ const Orders = () => {
               Today
             </button>
             <button
-              onClick={setThisWeekFilter}
+              onClick={() => {
+                setSelectedMonth('')
+                setThisWeekFilter()
+              }}
               className="px-3 py-1.5 text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 rounded"
             >
               This Week
             </button>
             <button
-              onClick={setThisMonthFilter}
+              onClick={() => {
+                setSelectedMonth('')
+                setThisMonthFilter()
+              }}
               className="px-3 py-1.5 text-xs bg-slate-800 text-slate-400 hover:bg-slate-700 rounded"
             >
               This Month
             </button>
-            {(dateFilter.startDate || dateFilter.endDate) && (
+            {(dateFilter.startDate || dateFilter.endDate || selectedMonth) && (
               <button
                 onClick={clearDateFilter}
                 className="px-3 py-1.5 text-xs bg-red-900/50 text-red-400 hover:bg-red-900 rounded"

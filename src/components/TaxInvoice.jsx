@@ -181,9 +181,9 @@ const TaxInvoice = ({ order, customer, onClose }) => {
                   </span>
                   <p className="header-title text-xl font-bold tracking-wide">{COMPANY_INFO.legalName}</p>
                   <p className="text-center text-[11px] mt-1">{COMPANY_INFO.registeredAddress}</p>
-                  {/* <p className="text-center text-[11px] mt-1">
+                  <p className="text-center text-[11px] mt-1 font-medium text-gray-700">
                     GSTIN: {COMPANY_INFO.gstin} &nbsp;|&nbsp; PAN: {COMPANY_INFO.pan} &nbsp;|&nbsp; State: {COMPANY_INFO.state}
-                  </p> */}
+                  </p>
                   <div className="text-center mt-2">
                     <span className="doc-title inline-block text-sm font-bold bg-gray-200 border border-black px-4 py-1">
                       TAX INVOICE
@@ -244,15 +244,15 @@ const TaxInvoice = ({ order, customer, onClose }) => {
               {/* Line Items Header */}
               <tr className="bg-gray-200">
                 <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[4%]">Sno</th>
-                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold">Description of Goods</th>
-                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[7%]">CGST%</th>
-                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[7%]">SGST%</th>
-                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[10%]">Quantity</th>
-                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[7%]">Scheme</th>
+                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[23%]">Description of Goods</th>
+                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[8%]">Qty</th>
                 <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[9%]">Rate</th>
-                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[6%]">Dis%</th>
-                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[6%]">Per</th>
-                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[11%]">Amount</th>
+                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[12%]">Taxable Amt</th>
+                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[6%]">CGST%</th>
+                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[10%]">CGST Amt</th>
+                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[6%]">SGST%</th>
+                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[10%]">SGST Amt</th>
+                <th className="border border-black px-1 py-1.5 text-center text-[9px] font-bold w-[12%]">Total</th>
               </tr>
 
               {/* Line Items */}
@@ -260,14 +260,14 @@ const TaxInvoice = ({ order, customer, onClose }) => {
                 <tr key={idx}>
                   <td className="border border-black px-1 py-1.5 text-center">{idx + 1}</td>
                   <td className="border border-black px-2 py-1.5">{item.description}</td>
-                  <td className="border border-black px-1 py-1.5 text-center">{item.cgstPercent.toFixed(2)}</td>
-                  <td className="border border-black px-1 py-1.5 text-center">{item.sgstPercent.toFixed(2)}</td>
                   <td className="border border-black px-1 py-1.5 text-center">{item.quantity} {item.unit}</td>
-                  <td className="border border-black px-1 py-1.5 text-center">&nbsp;</td>
-                  <td className="border border-black px-1 py-1.5 text-right">{formatCurrency(item.exclusiveRate)}</td>
-                  <td className="border border-black px-1 py-1.5 text-center">&nbsp;</td>
-                  <td className="border border-black px-1 py-1.5 text-center">{item.unit}</td>
+                  <td className="border border-black px-1 py-1.5 text-right">{formatCurrency(item.inclusiveRate)}</td>
                   <td className="border border-black px-1 py-1.5 text-right">{formatCurrency(item.netAmount)}</td>
+                  <td className="border border-black px-1 py-1.5 text-center">{item.cgstPercent.toFixed(1)}%</td>
+                  <td className="border border-black px-1 py-1.5 text-right font-medium text-emerald-800">{formatCurrency(item.cgstAmount)}</td>
+                  <td className="border border-black px-1 py-1.5 text-center">{item.sgstPercent.toFixed(1)}%</td>
+                  <td className="border border-black px-1 py-1.5 text-right font-medium text-emerald-800">{formatCurrency(item.sgstAmount)}</td>
+                  <td className="border border-black px-1 py-1.5 text-right font-bold">{formatCurrency(item.grossAmount)}</td>
                 </tr>
               ))}
 

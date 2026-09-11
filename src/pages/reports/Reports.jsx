@@ -45,7 +45,10 @@ const Reports = () => {
     }
 
     const generateSalesReportInner = async () => {
-      const orders = await getOrders()
+      const [orders, customers] = await Promise.all([
+        getOrders(),
+        getCustomers()
+      ])
       const filteredOrders = orders.filter(order => {
         // Parse the order date which is in format "08 Mar 2026" or similar
         let orderDateStr = order.date
@@ -88,7 +91,7 @@ const Reports = () => {
         summary.byPaymentMode[mode].amount += order.paid || 0
       })
 
-      setReportData({ orders: filteredOrders, summary })
+      setReportData({ orders: filteredOrders, summary, customers })
     }
 
     const generateCustomerReportInner = async () => {
@@ -264,10 +267,40 @@ const Reports = () => {
   }
 
   const generateSalesCSV = () => {
-    const { orders, summary } = reportData
-    let csv = `Sales Report (${dateRange.startDate} to ${dateRange.endDate})\n\nSummary\nTotal Orders,${summary.totalOrders}\nTotal Revenue (Rs),${summary.totalRevenue}\nTotal Paid (Rs),${summary.totalPaid}\nTotal Pending (Rs),${summary.totalPending}\n\nOrders\nDate,Customer,Source,1000ml,500ml,200ml,Total Bill (Rs),Paid (Rs),Remaining (Rs),Payment Mode\n`
+    const { orders, summary, customers = [] } = reportData
+    const customerMap = new Map()
+    customers.forEach(c => {
+      if (c.id) customerMap.set(c.id, c)
+      if (c.shopName) customerMap.set(c.shopName, c)
+    })
+
+    const formatExportDate = (dateStr) => {
+      if (!dateStr) return ''
+      const parts = dateStr.split('-')
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`
+      }
+      const d = new Date(dateStr)
+      if (!isNaN(d.getTime())) {
+        const day = String(d.getDate()).padStart(2, '0')
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const year = d.getFullYear()
+        return `${day}-${month}-${year}`
+      }
+      return dateStr
+    }
+
+    let csv = `Sales Report (${dateRange.startDate} to ${dateRange.endDate})\n\nSummary\nTotal Orders,${summary.totalOrders}\nTotal Revenue (Rs),${summary.totalRevenue}\nTotal Paid (Rs),${summary.totalPaid}\nTotal Pending (Rs),${summary.totalPending}\n\nOrders\nOrder Date,Customer Name,Address,Mob,1000 Ml Qty,1000 Ml Rate,500 Ml Qty,500 Ml Rate,200 Ml Qty,200 Ml Rate,Taxable Value (Rs),CGST 2.5% (Rs),SGST 2.5% (Rs),Total Bill,Paid,Remaining,Status\n`
     orders.forEach(o => {
-      csv += `${o.date || 'N/A'},"${o.customer || 'N/A'}",${o.orderSource || 'N/A'},${o.qty1000ml || 0},${o.qty500ml || 0},${o.qty200ml || 0},${o.totalBill || o.billingAmount || 0},${o.paid || 0},${o.remaining || 0},${o.paymentMode || 'N/A'}\n`
+      const cust = customerMap.get(o.customerId) || customerMap.get(o.customer)
+      const address = o.address || cust?.location || cust?.address || ''
+      const mobile = o.mobile || cust?.mobile || ''
+      const totalBill = o.totalBill || o.billingAmount || ((o.qty1000ml || 0) * (o.rate1000ml || 0) + (o.qty500ml || 0) * (o.rate500ml || 0) + (o.qty200ml || 0) * (o.rate200ml || 0))
+      const taxable = Number((totalBill / 1.05).toFixed(2))
+      const totalTax = Number((totalBill - taxable).toFixed(2))
+      const cgst = Number((totalTax / 2).toFixed(2))
+      const sgst = Number((totalTax - cgst).toFixed(2))
+      csv += `"${formatExportDate(o.date)}","${o.customer || ''}","${address}","${mobile}",${o.qty1000ml || 0},${o.rate1000ml || 0},${o.qty500ml || 0},${o.rate500ml || 0},${o.qty200ml || 0},${o.rate200ml || 0},${taxable},${cgst},${sgst},${totalBill},${o.paid || 0},${o.remaining || 0},"${o.status || 'Completed'}"\n`
     })
     return csv
   }
